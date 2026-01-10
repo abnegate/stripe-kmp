@@ -34,30 +34,34 @@ class JvmStripeSDK : StripeSDK {
         cvc: String
     ): StripeResult<PaymentMethod> = withContext(Dispatchers.IO) {
         try {
-            // Note: In production, payment methods should be created client-side or via tokenization
-            // The Stripe Java SDK is designed for server-side use and doesn't directly create
-            // payment methods from raw card details for PCI compliance reasons.
-            // This shows the pattern - you would typically receive a token or payment method ID
-            // from the client and then use it here.
+            // Create a payment method with card details using the Stripe Java SDK
+            val cardParams = PaymentMethodCreateParams.CardDetails.builder()
+                .setNumber(cardNumber)
+                .setExpMonth(expiryMonth.toLong())
+                .setExpYear(expiryYear.toLong())
+                .setCvc(cvc)
+                .build()
             
             val params = PaymentMethodCreateParams.builder()
                 .setType(PaymentMethodCreateParams.Type.CARD)
+                .setCard(cardParams)
                 .build()
             
             val paymentMethod = StripePaymentMethod.create(params)
             
-            // Simulating the response with the provided card details
-            // In reality, the card details would come from the PaymentMethod object
+            // Extract actual card details from the created payment method
             StripeResult.Success(
                 PaymentMethod(
                     id = paymentMethod.id,
-                    type = "card",
-                    card = Card(
-                        brand = "visa", // Would come from paymentMethod.card.brand
-                        last4 = cardNumber.takeLast(4),
-                        expiryMonth = expiryMonth,
-                        expiryYear = expiryYear
-                    )
+                    type = paymentMethod.type,
+                    card = paymentMethod.card?.let { stripeCard ->
+                        Card(
+                            brand = stripeCard.brand ?: "unknown",
+                            last4 = stripeCard.last4 ?: cardNumber.takeLast(4),
+                            expiryMonth = stripeCard.expMonth?.toInt() ?: expiryMonth,
+                            expiryYear = stripeCard.expYear?.toInt() ?: expiryYear
+                        )
+                    }
                 )
             )
         } catch (e: CardException) {
