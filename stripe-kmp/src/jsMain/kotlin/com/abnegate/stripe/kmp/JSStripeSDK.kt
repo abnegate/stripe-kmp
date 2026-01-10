@@ -15,6 +15,11 @@ external class StripeJS(publishableKey: String) {
 
 /**
  * Web/JS implementation of Stripe SDK using Stripe.js
+ * 
+ * For production use:
+ * 1. Include Stripe.js in your HTML: <script src="https://js.stripe.com/v3/"></script>
+ * 2. Use the Elements API for secure card input
+ * 3. Handle SCA (Strong Customer Authentication) for European payments
  */
 class JSStripeSDK : StripeSDK {
     private var stripe: StripeJS? = null
@@ -51,13 +56,16 @@ class JSStripeSDK : StripeSDK {
             params.asDynamic().card.exp_year = expiryYear
             params.asDynamic().card.cvc = cvc
             
-            // In a real implementation, this would call stripe.createPaymentMethod(params)
+            // In a real implementation, this would call:
+            // val result = stripe?.createPaymentMethod(params)?.await()
+            // and parse the response
+            
             StripeResult.Success(
                 PaymentMethod(
                     id = "pm_js_${js("Date.now()")}",
                     type = "card",
                     card = Card(
-                        brand = "visa",
+                        brand = detectCardBrand(cardNumber),
                         last4 = cardNumber.takeLast(4),
                         expiryMonth = expiryMonth,
                         expiryYear = expiryYear
@@ -65,10 +73,7 @@ class JSStripeSDK : StripeSDK {
                 )
             )
         } catch (e: Exception) {
-            StripeResult.Error(
-                message = e.message ?: "Failed to create payment method",
-                code = "js_error"
-            )
+            mapJSError(e)
         }
     }
     
@@ -77,7 +82,9 @@ class JSStripeSDK : StripeSDK {
         paymentMethodId: String
     ): StripeResult<PaymentIntent> {
         return try {
-            // In a real implementation, this would call stripe.confirmCardPayment()
+            // In a real implementation, this would call:
+            // val result = stripe?.confirmCardPayment(clientSecret, ...)?.await()
+            
             StripeResult.Success(
                 PaymentIntent(
                     id = "pi_js_${js("Date.now()")}",
@@ -88,10 +95,7 @@ class JSStripeSDK : StripeSDK {
                 )
             )
         } catch (e: Exception) {
-            StripeResult.Error(
-                message = e.message ?: "Failed to confirm payment",
-                code = "js_error"
-            )
+            mapJSError(e)
         }
     }
     
@@ -99,7 +103,9 @@ class JSStripeSDK : StripeSDK {
         clientSecret: String
     ): StripeResult<PaymentIntent> {
         return try {
-            // In a real implementation, this would call stripe.retrievePaymentIntent()
+            // In a real implementation, this would call:
+            // val result = stripe?.retrievePaymentIntent(clientSecret)?.await()
+            
             StripeResult.Success(
                 PaymentIntent(
                     id = "pi_js_${js("Date.now()")}",
@@ -110,10 +116,176 @@ class JSStripeSDK : StripeSDK {
                 )
             )
         } catch (e: Exception) {
-            StripeResult.Error(
-                message = e.message ?: "Failed to retrieve payment intent",
-                code = "js_error"
+            mapJSError(e)
+        }
+    }
+    
+    override suspend fun createCustomer(
+        email: String,
+        name: String?,
+        paymentMethodId: String?
+    ): StripeResult<Customer> {
+        return try {
+            // Note: Customer creation should be done server-side for security
+            // This is a client-side representation
+            
+            StripeResult.Success(
+                Customer(
+                    id = "cus_js_${js("Date.now()")}",
+                    email = email,
+                    name = name,
+                    defaultPaymentMethodId = paymentMethodId
+                )
             )
+        } catch (e: Exception) {
+            mapJSError(e)
+        }
+    }
+    
+    override suspend fun retrieveCustomer(
+        customerId: String
+    ): StripeResult<Customer> {
+        return try {
+            // Note: Customer retrieval should be done server-side
+            
+            StripeResult.Success(
+                Customer(
+                    id = customerId,
+                    email = "customer@example.com",
+                    name = "JS Customer",
+                    defaultPaymentMethodId = null
+                )
+            )
+        } catch (e: Exception) {
+            mapJSError(e)
+        }
+    }
+    
+    override suspend fun updateCustomer(
+        customerId: String,
+        email: String?,
+        name: String?,
+        defaultPaymentMethodId: String?
+    ): StripeResult<Customer> {
+        return try {
+            // Note: Customer updates should be done server-side
+            
+            StripeResult.Success(
+                Customer(
+                    id = customerId,
+                    email = email ?: "updated@example.com",
+                    name = name ?: "Updated Customer",
+                    defaultPaymentMethodId = defaultPaymentMethodId
+                )
+            )
+        } catch (e: Exception) {
+            mapJSError(e)
+        }
+    }
+    
+    override suspend fun createSubscription(
+        customerId: String,
+        priceId: String,
+        quantity: Int
+    ): StripeResult<Subscription> {
+        return try {
+            // Note: Subscription creation should be done server-side
+            
+            val now = js("Date.now()").unsafeCast<Double>().toLong()
+            StripeResult.Success(
+                Subscription(
+                    id = "sub_js_$now",
+                    customerId = customerId,
+                    status = "active",
+                    currentPeriodEnd = now + 2592000000, // +30 days
+                    items = listOf(
+                        SubscriptionItem(
+                            id = "si_$now",
+                            priceId = priceId,
+                            quantity = quantity
+                        )
+                    )
+                )
+            )
+        } catch (e: Exception) {
+            mapJSError(e)
+        }
+    }
+    
+    override suspend fun retrieveSubscription(
+        subscriptionId: String
+    ): StripeResult<Subscription> {
+        return try {
+            // Note: Subscription retrieval should be done server-side
+            
+            val now = js("Date.now()").unsafeCast<Double>().toLong()
+            StripeResult.Success(
+                Subscription(
+                    id = subscriptionId,
+                    customerId = "cus_example",
+                    status = "active",
+                    currentPeriodEnd = now + 2592000000,
+                    items = emptyList()
+                )
+            )
+        } catch (e: Exception) {
+            mapJSError(e)
+        }
+    }
+    
+    override suspend fun cancelSubscription(
+        subscriptionId: String
+    ): StripeResult<Subscription> {
+        return try {
+            // Note: Subscription cancellation should be done server-side
+            
+            val now = js("Date.now()").unsafeCast<Double>().toLong()
+            StripeResult.Success(
+                Subscription(
+                    id = subscriptionId,
+                    customerId = "cus_example",
+                    status = "canceled",
+                    currentPeriodEnd = now + 2592000000,
+                    items = emptyList()
+                )
+            )
+        } catch (e: Exception) {
+            mapJSError(e)
+        }
+    }
+    
+    /**
+     * Map JavaScript exceptions to common error format
+     */
+    private fun mapJSError(exception: Exception): StripeResult.Error {
+        val message = exception.message ?: "JS Stripe error occurred"
+        
+        // In a real implementation, we would check the Stripe.js error type and code
+        val code = when {
+            message.contains("card_declined", ignoreCase = true) -> StripeErrorCode.CARD_DECLINED
+            message.contains("expired", ignoreCase = true) -> StripeErrorCode.EXPIRED_CARD
+            message.contains("incorrect_cvc", ignoreCase = true) -> StripeErrorCode.INCORRECT_CVC
+            message.contains("incorrect_number", ignoreCase = true) -> StripeErrorCode.INCORRECT_NUMBER
+            message.contains("network", ignoreCase = true) -> StripeErrorCode.NETWORK_ERROR
+            else -> StripeErrorCode.UNKNOWN
+        }
+        
+        return StripeResult.Error(
+            message = message,
+            code = code.code
+        )
+    }
+    
+    /**
+     * Detect card brand from card number
+     */
+    private fun detectCardBrand(cardNumber: String): String {
+        return when {
+            cardNumber.startsWith("4") -> "visa"
+            cardNumber.startsWith("5") -> "mastercard"
+            cardNumber.startsWith("34") || cardNumber.startsWith("37") -> "amex"
+            cardNumber.startsWith("6") -> "discover"
+            else -> "unknown"
         }
     }
 }

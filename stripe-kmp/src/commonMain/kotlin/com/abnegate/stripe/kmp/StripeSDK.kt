@@ -47,6 +47,59 @@ data class PaymentIntent(
 )
 
 /**
+ * Customer details
+ */
+data class Customer(
+    val id: String,
+    val email: String?,
+    val name: String?,
+    val defaultPaymentMethodId: String?
+)
+
+/**
+ * Subscription details
+ */
+data class Subscription(
+    val id: String,
+    val customerId: String,
+    val status: String,
+    val currentPeriodEnd: Long,
+    val items: List<SubscriptionItem>
+)
+
+/**
+ * Subscription item details
+ */
+data class SubscriptionItem(
+    val id: String,
+    val priceId: String,
+    val quantity: Int
+)
+
+/**
+ * Stripe error codes
+ */
+enum class StripeErrorCode(val code: String) {
+    CARD_DECLINED("card_declined"),
+    EXPIRED_CARD("expired_card"),
+    INCORRECT_CVC("incorrect_cvc"),
+    PROCESSING_ERROR("processing_error"),
+    INCORRECT_NUMBER("incorrect_number"),
+    INVALID_REQUEST("invalid_request_error"),
+    API_ERROR("api_error"),
+    AUTHENTICATION_ERROR("authentication_error"),
+    RATE_LIMIT("rate_limit_error"),
+    NETWORK_ERROR("network_error"),
+    UNKNOWN("unknown_error");
+    
+    companion object {
+        fun fromCode(code: String?): StripeErrorCode {
+            return values().find { it.code == code } ?: UNKNOWN
+        }
+    }
+}
+
+/**
  * Common interface for Stripe SDK across all platforms
  */
 interface StripeSDK {
@@ -79,6 +132,55 @@ interface StripeSDK {
     suspend fun retrievePaymentIntent(
         clientSecret: String
     ): StripeResult<PaymentIntent>
+    
+    /**
+     * Create a customer
+     */
+    suspend fun createCustomer(
+        email: String,
+        name: String? = null,
+        paymentMethodId: String? = null
+    ): StripeResult<Customer>
+    
+    /**
+     * Retrieve a customer
+     */
+    suspend fun retrieveCustomer(
+        customerId: String
+    ): StripeResult<Customer>
+    
+    /**
+     * Update a customer
+     */
+    suspend fun updateCustomer(
+        customerId: String,
+        email: String? = null,
+        name: String? = null,
+        defaultPaymentMethodId: String? = null
+    ): StripeResult<Customer>
+    
+    /**
+     * Create a subscription
+     */
+    suspend fun createSubscription(
+        customerId: String,
+        priceId: String,
+        quantity: Int = 1
+    ): StripeResult<Subscription>
+    
+    /**
+     * Retrieve a subscription
+     */
+    suspend fun retrieveSubscription(
+        subscriptionId: String
+    ): StripeResult<Subscription>
+    
+    /**
+     * Cancel a subscription
+     */
+    suspend fun cancelSubscription(
+        subscriptionId: String
+    ): StripeResult<Subscription>
 }
 
 /**

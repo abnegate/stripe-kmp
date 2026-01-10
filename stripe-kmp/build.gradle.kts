@@ -58,7 +58,8 @@ kotlin {
         
         val jvmMain by getting {
             dependencies {
-                // Can add Stripe Java/Android SDK dependency here if needed
+                // Stripe Java SDK for actual integration
+                implementation("com.stripe:stripe-java:28.0.0")
             }
         }
         
