@@ -10,7 +10,7 @@ env:
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
 
 jobs:
-  build:
+  test:
     runs-on: macos-latest
 
     steps:
