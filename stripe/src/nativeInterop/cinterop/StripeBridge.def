@@ -1,0 +1,3 @@
+language = Objective-C
+headers = StripeBridge.h
+compilerOpts = -framework UIKit -framework Foundation

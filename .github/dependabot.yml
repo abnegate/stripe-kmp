@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+      compose:
+        patterns:
+          - "org.jetbrains.compose*"
+      stripe:
+        patterns:
+          - "com.stripe*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

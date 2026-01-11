@@ -1,0 +1,5 @@
+language = Objective-C
+headers = StripePaymentSheet/StripePaymentSheet.h
+modules = StripePaymentSheet
+compilerOpts = -framework StripePaymentSheet
+linkerOpts = -framework StripePaymentSheet
