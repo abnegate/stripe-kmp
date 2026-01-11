@@ -5,9 +5,8 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kover)
+    alias(libs.plugins.mavenPublish)
     kotlin("native.cocoapods")
-    id("maven-publish")
-    id("signing")
 }
 
 group = "com.jakebarnby.stripe"
@@ -135,85 +134,6 @@ android {
     }
 }
 
-// Publishing configuration for Maven Central
-publishing {
-    publications {
-        withType<MavenPublication> {
-            // Artifact coordinates
-            groupId = "com.jakebarnby"
-            artifactId = when (name) {
-                "kotlinMultiplatform" -> "stripe-kmp"
-                else -> "stripe-kmp-$name"
-            }
-
-            pom {
-                name.set("Stripe KMP")
-                description.set("Kotlin Multiplatform wrapper for Stripe SDK")
-                url.set("https://github.com/jakebarnby/stripe-kmp")
-
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("jakebarnby")
-                        name.set("Jake Barnby")
-                        email.set("jake@jakebarnby.com")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/jakebarnby/stripe-kmp.git")
-                    developerConnection.set("scm:git:ssh://github.com:jakebarnby/stripe-kmp.git")
-                    url.set("https://github.com/jakebarnby/stripe-kmp")
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name = "sonatype"
-            val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-
-            credentials {
-                username = providers.gradleProperty("ossrhUsername")
-                    .orElse(providers.environmentVariable("OSSRH_USERNAME"))
-                    .getOrNull()
-                password = providers.gradleProperty("ossrhPassword")
-                    .orElse(providers.environmentVariable("OSSRH_PASSWORD"))
-                    .getOrNull()
-            }
-        }
-    }
-}
-
-// Signing configuration
-signing {
-    val signingKeyId = providers.gradleProperty("signing.keyId")
-        .orElse(providers.environmentVariable("SIGNING_KEY_ID"))
-    val signingKey = providers.gradleProperty("signing.key")
-        .orElse(providers.environmentVariable("SIGNING_KEY"))
-    val signingPassword = providers.gradleProperty("signing.password")
-        .orElse(providers.environmentVariable("SIGNING_PASSWORD"))
-
-    if (signingKeyId.isPresent && signingKey.isPresent && signingPassword.isPresent) {
-        useInMemoryPgpKeys(signingKeyId.get(), signingKey.get(), signingPassword.get())
-        sign(publishing.publications)
-    }
-}
-
-// Ensure signing only happens when publishing to Maven Central
-tasks.withType<Sign>().configureEach {
-    isEnabled = providers.environmentVariable("OSSRH_USERNAME").isPresent ||
-                providers.gradleProperty("ossrhUsername").isPresent
-}
 
 // Code coverage configuration
 kover {

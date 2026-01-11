@@ -40,47 +40,11 @@ jobs:
 
     - name: Publish to Maven Central
       env:
-        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-        SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
-        SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
-        SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
-      run: ./gradlew :stripe:publishAllPublicationsToSonatypeRepository --no-daemon
+        ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+        ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+        ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+        ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
+      run: ./gradlew :stripe:publishAndReleaseToMavenCentral --no-daemon
 
     - name: Build iOS XCFramework
       run: ./gradlew :stripe:assembleStripeKMPReleaseXCFramework --no-daemon || true
-
-  # Close and release the staging repository
-  close-staging:
-    needs: release
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Close and Release Staging Repository
-      env:
-        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-      run: |
-        # Find staging repository
-        STAGING_REPO=$(curl -s -u "$OSSRH_USERNAME:$OSSRH_PASSWORD" \
-          "https://s01.oss.sonatype.org/service/local/staging/profile_repositories" | \
-          grep -oP '(?<=<repositoryId>)[^<]+' | head -1)
-
-        if [ -n "$STAGING_REPO" ]; then
-          # Close staging repository
-          curl -s -u "$OSSRH_USERNAME:$OSSRH_PASSWORD" -X POST \
-            "https://s01.oss.sonatype.org/service/local/staging/bulk/close" \
-            -H "Content-Type: application/json" \
-            -d "{\"data\":{\"stagedRepositoryIds\":[\"$STAGING_REPO\"],\"description\":\"Closing\"}}"
-
-          echo "Waiting for repository to close..."
-          sleep 60
-
-          # Release staging repository
-          curl -s -u "$OSSRH_USERNAME:$OSSRH_PASSWORD" -X POST \
-            "https://s01.oss.sonatype.org/service/local/staging/bulk/promote" \
-            -H "Content-Type: application/json" \
-            -d "{\"data\":{\"stagedRepositoryIds\":[\"$STAGING_REPO\"],\"description\":\"Releasing\"}}"
-
-          echo "Release complete!"
-        fi
