@@ -33,6 +33,9 @@ jobs:
     - name: Build and Test
       run: ./gradlew :stripe:check --no-daemon
 
+    - name: Verify Coverage
+      run: ./gradlew :stripe:koverVerify --no-daemon
+
     - name: Upload Test Reports
       if: always()
       uses: actions/upload-artifact@v6

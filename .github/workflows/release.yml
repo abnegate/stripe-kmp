@@ -32,7 +32,8 @@ jobs:
 
     - name: Update version in build.gradle.kts
       run: |
-        sed -i '' "s/version = \".*\"/version = \"${{ steps.version.outputs.VERSION }}\"/" stripe/build.gradle.kts
+        # Only replace the project version (unindented), not pod versions (indented)
+        sed -i '' "s/^version = \".*\"/version = \"${{ steps.version.outputs.VERSION }}\"/" stripe/build.gradle.kts
 
     - name: Build and Test
       run: ./gradlew :stripe:check --no-daemon

@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kover)
     kotlin("native.cocoapods")
     id("maven-publish")
     id("signing")
@@ -212,4 +213,35 @@ signing {
 tasks.withType<Sign>().configureEach {
     isEnabled = providers.environmentVariable("OSSRH_USERNAME").isPresent ||
                 providers.gradleProperty("ossrhUsername").isPresent
+}
+
+// Code coverage configuration
+kover {
+    reports {
+        filters {
+            excludes {
+                // Exclude platform-specific implementations that require real SDK/Activity
+                classes(
+                    // Android implementations requiring Activity/Context
+                    "com.jakebarnby.stripe.Stripe\$*",
+                    "com.jakebarnby.stripe.PaymentSheet\$*",
+                    "com.jakebarnby.stripe.PaymentAuthenticator\$*",
+                    "com.jakebarnby.stripe.GooglePayLauncher\$*",
+                    "com.jakebarnby.stripe.ApplePayLauncher\$*",
+                    "com.jakebarnby.stripe.FinancialConnectionsSheet\$*",
+                    "com.jakebarnby.stripe.IdentityVerificationSheet\$*",
+                    // Android mappers (require real Stripe SDK types)
+                    "com.jakebarnby.stripe.AndroidMappersKt*",
+                    // Generated code
+                    "*\$\$serializer",
+                    "*\$Companion"
+                )
+            }
+        }
+        verify {
+            rule {
+                minBound(75) // Require 75% coverage on testable code (excludes platform implementations)
+            }
+        }
+    }
 }
