@@ -49,33 +49,6 @@ jobs:
     - name: Build iOS XCFramework
       run: ./gradlew :stripe:assembleStripeKMPReleaseXCFramework --no-daemon || true
 
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        name: Release ${{ steps.version.outputs.VERSION }}
-        body: |
-          ## Installation
-
-          ### Gradle (Android/JVM)
-          ```kotlin
-          implementation("com.jakebarnby:stripe-kmp:${{ steps.version.outputs.VERSION }}")
-          ```
-
-          ### CocoaPods (iOS)
-          ```ruby
-          pod 'StripeKMP', '~> ${{ steps.version.outputs.VERSION }}'
-          ```
-
-          ### npm (JavaScript)
-          ```bash
-          npm install @jakebarnby/stripe-kmp@${{ steps.version.outputs.VERSION }}
-          ```
-        generate_release_notes: true
-        files: |
-          stripe/build/outputs/aar/*.aar
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   # Close and release the staging repository
   close-staging:
     needs: release
