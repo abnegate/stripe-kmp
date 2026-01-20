@@ -40,6 +40,18 @@ public abstract class IntegrationTestBase {
     }
 
     /**
+     * Skip the test if running on JVM platform.
+     * Token and PaymentMethod creation requires client-side Stripe SDKs (Android SDK, iOS SDK, Stripe.js),
+     * which are not available on JVM. JVM should use stripe-java SDK for server-side operations only.
+     */
+    protected fun skipOnJvm() {
+        if (isJvmPlatform()) {
+            println("⊘ Skipping: Client-side Stripe operations require native SDKs (not available on JVM)")
+            return
+        }
+    }
+
+    /**
      * Assert that a StripeResult is Success, providing detailed error information if it fails.
      * Returns the unwrapped value for convenient use.
      *

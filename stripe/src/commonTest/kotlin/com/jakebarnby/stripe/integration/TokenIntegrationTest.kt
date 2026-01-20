@@ -16,6 +16,8 @@ public class TokenIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_withValidCard_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -36,6 +38,8 @@ public class TokenIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_withInvalidLuhn_fails() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -58,6 +62,8 @@ public class TokenIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_withMastercard_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -76,6 +82,8 @@ public class TokenIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_withAmex_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -94,6 +102,8 @@ public class TokenIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateBankAccountToken_withValidAccount_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -116,6 +126,8 @@ public class TokenIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_withCardholderName_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -135,6 +147,8 @@ public class TokenIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_withAddress_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 

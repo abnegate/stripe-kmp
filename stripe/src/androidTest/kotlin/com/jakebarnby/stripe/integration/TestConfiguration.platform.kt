@@ -6,3 +6,5 @@ package com.jakebarnby.stripe.integration
 internal fun platformGetSystemProperty(name: String): String? = System.getProperty(name)
 
 internal fun platformGetEnvironmentVariable(name: String): String? = System.getenv(name)
+
+internal fun isJvmPlatform(): Boolean = false

@@ -19,6 +19,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withCard_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -46,6 +48,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withCardAndFullBillingDetails_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -87,6 +91,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withMastercard_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -116,6 +122,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withAmex_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -145,6 +153,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withMetadata_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -175,6 +185,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testRetrievePaymentMethod_afterCreation_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -204,6 +216,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_usingBuilder_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 

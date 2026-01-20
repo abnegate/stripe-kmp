@@ -22,6 +22,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_visaSuccess() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -45,6 +47,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_mastercard() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -64,6 +68,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_amex() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -83,6 +89,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_withBillingAddress() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -107,6 +115,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_invalidCard() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -124,6 +134,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_withIdempotencyKey() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -150,6 +162,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_card() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -172,6 +186,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_cardWithBillingDetails() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -207,6 +223,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_cardFromToken() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -231,6 +249,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testRetrievePaymentMethod() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -262,6 +282,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateSource_card() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -284,6 +306,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateCardToken_expiredCard() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -301,6 +325,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_invalidCard() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -322,6 +348,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreateBankAccountToken() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -346,6 +374,8 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_variousCardBrands() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 

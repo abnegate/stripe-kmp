@@ -164,3 +164,9 @@ public object TestConfiguration {
 internal expect fun platformGetSystemProperty(name: String): String?
 
 internal expect fun platformGetEnvironmentVariable(name: String): String?
+
+/**
+ * Check if running on JVM platform.
+ * Returns true for JVM, false for other platforms (JS, iOS, Android, etc.)
+ */
+internal expect fun isJvmPlatform(): Boolean
