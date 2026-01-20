@@ -1,5 +1,8 @@
 package com.jakebarnby.stripe.integration
 
-internal actual fun platformGetSystemProperty(name: String): String? = System.getProperty(name)
+// Note: These functions shadow the expect/actual declarations in commonTest.
+// androidInstrumentedTest cannot depend on commonTest due to source set tree restrictions,
+// so we provide standalone implementations here that mirror the JVM behavior.
+internal fun platformGetSystemProperty(name: String): String? = System.getProperty(name)
 
-internal actual fun platformGetEnvironmentVariable(name: String): String? = System.getenv(name)
+internal fun platformGetEnvironmentVariable(name: String): String? = System.getenv(name)

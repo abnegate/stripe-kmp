@@ -114,6 +114,15 @@ kotlin {
             }
         }
 
+        val androidInstrumentedTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlin.testJunit)
+                implementation(libs.androidx.testExt.junit)
+                implementation(libs.androidx.espresso.core)
+            }
+        }
+
         val clientMain by creating {
             dependsOn(commonMain.get())
             dependencies {
@@ -177,8 +186,12 @@ kotlin {
             }
         }
 
-        jvmMain.dependencies {
-            api(libs.stripe.java)
+        jvmMain {
+            dependsOn(clientMain)
+            dependencies {
+                api(libs.stripe.java)
+                implementation(libs.ktor.client.cio)
+            }
         }
     }
 }
@@ -224,26 +237,26 @@ kover {
     reports {
         filters {
             excludes {
-                // Exclude platform-specific implementations that require real SDK/Activity
                 classes(
-                    // Android implementations requiring Activity/Context
-                    "com.jakebarnby.stripe.Stripe",
-                    "com.jakebarnby.stripe.Stripe_androidKt",
+                    "com.jakebarnby.stripe.*\$*\$*", // Nested lambdas/callbacks from Android UI code
+                    "com.jakebarnby.stripe.GooglePayLauncher",
+                    "com.jakebarnby.stripe.GooglePayLauncher\$*",
+                    "com.jakebarnby.stripe.*_androidKt", // Android extension functions
+                )
+                // Android mappers - require real Stripe Android SDK types
+                classes("com.jakebarnby.stripe.AndroidMappersKt")
+                // JVM server operations - require real Stripe secret keys
+                classes(
+                    "com.jakebarnby.stripe.Stripe\$createAccountToken\$*",
+                    "com.jakebarnby.stripe.Stripe\$createEphemeralKey\$*",
+                    "com.jakebarnby.stripe.Stripe\$retrieveCustomer\$*",
                     "com.jakebarnby.stripe.Stripe_jvmKt",
-                    "com.jakebarnby.stripe.Stripe\$*",
-                    "com.jakebarnby.stripe.ApplePayLauncher\$*",
-                    "com.jakebarnby.stripe.HttpClientEngine_androidKt",
-                    // Android mappers (require real Stripe SDK types)
-                    "com.jakebarnby.stripe.AndroidMappersKt*",
-                    // Generated code
-                    "*\$\$serializer",
-                    "*\$Companion"
                 )
             }
         }
         verify {
             rule {
-                minBound(75) // Require 75% coverage on testable code (excludes platform implementations)
+                minBound(75)
             }
         }
     }

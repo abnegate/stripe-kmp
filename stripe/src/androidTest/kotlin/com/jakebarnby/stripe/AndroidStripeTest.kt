@@ -80,7 +80,7 @@ class AndroidStripeTest {
         val params = CardParams.builder()
             .number("5555555555554444")
             .expMonth(6)
-            .expYear = 2026
+            .expYear(2026)
             .cvc("456")
             .name("Android User")
             .build()
@@ -221,8 +221,7 @@ class AndroidStripeTest {
     fun testConfirmSetupIntentParams_onAndroid() {
         val params = ConfirmSetupIntentParams.createWithPaymentMethodId(
             paymentMethodId = "pm_android_test_345",
-            clientSecret = "seti_android_secret_678",
-            returnUrl = "myandroidapp://stripe-redirect"
+            clientSecret = "seti_android_secret_678"
         )
 
         assertEquals("pm_android_test_345", params.paymentMethodId)
@@ -242,12 +241,12 @@ class AndroidStripeTest {
         val config = GooglePayConfiguration(
             environment = GooglePayEnvironment.TEST,
             merchantName = "Test Android Merchant",
-            countryCode = "US"
+            merchantCountryCode = "US"
         )
 
         assertEquals(GooglePayEnvironment.TEST, config.environment)
         assertEquals("Test Android Merchant", config.merchantName)
-        assertEquals("US", config.countryCode)
+        assertEquals("US", config.merchantCountryCode)
     }
 
     @Test
@@ -255,12 +254,12 @@ class AndroidStripeTest {
         val config = GooglePayConfiguration(
             environment = GooglePayEnvironment.PRODUCTION,
             merchantName = "Prod Merchant",
-            countryCode = "US",
-            allowedCardNetworks = listOf("VISA", "MASTERCARD", "AMEX")
+            merchantCountryCode = "US",
+            allowedCardNetworks = listOf(CardBrand.VISA, CardBrand.MASTERCARD, CardBrand.AMERICAN_EXPRESS)
         )
 
-        assertTrue(config.allowedCardNetworks?.contains("VISA") == true)
-        assertTrue(config.allowedCardNetworks?.contains("MASTERCARD") == true)
+        assertTrue(config.allowedCardNetworks.contains(CardBrand.VISA))
+        assertTrue(config.allowedCardNetworks.contains(CardBrand.MASTERCARD))
     }
 
 
