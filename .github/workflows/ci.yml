@@ -96,7 +96,9 @@ jobs:
         api-level: 30
         target: google_apis
         arch: x86_64
-        emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot-save
+        force-avd-creation: false
+        emulator-options: -no-window -no-audio -no-boot-anim -camera-back none -camera-front none -gpu swiftshader_indirect
+        disable-animations: true
         script: ./gradlew :stripe:connectedDebugAndroidTest --no-daemon
 
     - name: Upload Android UI Test Reports
@@ -138,7 +140,7 @@ jobs:
         xcodebuild build-for-testing \
           -project iosApp.xcodeproj \
           -scheme iosApp \
-          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+          -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
           -allowProvisioningUpdates \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
@@ -150,7 +152,7 @@ jobs:
         xcodebuild test-without-building \
           -project iosApp.xcodeproj \
           -scheme iosApp \
-          -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+          -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
           -only-testing:iosAppUITests \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO

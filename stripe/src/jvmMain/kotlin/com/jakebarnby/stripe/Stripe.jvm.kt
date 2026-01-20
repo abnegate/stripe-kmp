@@ -14,6 +14,7 @@ import com.stripe.param.PaymentMethodCreateParams as JavaPaymentMethodCreatePara
 import com.stripe.param.PaymentIntentConfirmParams as JavaPaymentIntentConfirmParams
 import com.stripe.param.SetupIntentConfirmParams as JavaSetupIntentConfirmParams
 import com.stripe.param.SourceCreateParams as JavaSourceCreateParams
+import com.stripe.net.RequestOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -30,10 +31,9 @@ import kotlinx.coroutines.withContext
 public actual class Stripe private constructor(
     public actual val configuration: StripeConfiguration
 ) {
-    init {
-        // Set the API key for stripe-java
-        StripeJava.apiKey = configuration.publishableKey
-    }
+    private val requestOptions = RequestOptions.builder()
+        .setApiKey(configuration.publishableKey)
+        .build()
 
     // ============================================================================
     // Token Creation
@@ -61,7 +61,7 @@ public actual class Stripe private constructor(
                 })
             }
 
-            val javaToken = JavaToken.create(tokenParams)
+            val javaToken = JavaToken.create(tokenParams, requestOptions)
             javaToken.toKmpToken()
         }
     }
@@ -82,7 +82,7 @@ public actual class Stripe private constructor(
                 })
             }
 
-            val javaToken = JavaToken.create(tokenParams)
+            val javaToken = JavaToken.create(tokenParams, requestOptions)
             javaToken.toKmpToken()
         }
     }
@@ -96,7 +96,7 @@ public actual class Stripe private constructor(
                     })
                 }
 
-                val javaToken = JavaToken.create(tokenParams)
+                val javaToken = JavaToken.create(tokenParams, requestOptions)
                 javaToken.toKmpToken()
             }
         }
@@ -113,7 +113,7 @@ public actual class Stripe private constructor(
                     })
                 }
 
-                val javaToken = JavaToken.create(tokenParams)
+                val javaToken = JavaToken.create(tokenParams, requestOptions)
                 javaToken.toKmpToken()
             }
         }
@@ -159,7 +159,7 @@ public actual class Stripe private constructor(
                 sourceParamsBuilder.setOwner(ownerBuilder.build())
             }
 
-            val javaSource = JavaSource.create(sourceParamsBuilder.build())
+            val javaSource = JavaSource.create(sourceParamsBuilder.build(), requestOptions)
             javaSource.toKmpSource()
         }
     }
@@ -169,7 +169,7 @@ public actual class Stripe private constructor(
         clientSecret: String
     ): StripeResult<Source> = withContext(Dispatchers.IO) {
         StripeResult.runCatching {
-            val javaSource = JavaSource.retrieve(sourceId)
+            val javaSource = JavaSource.retrieve(sourceId, requestOptions)
             javaSource.toKmpSource()
         }
     }
@@ -226,7 +226,7 @@ public actual class Stripe private constructor(
                 pmParamsBuilder.setBillingDetails(billingBuilder.build())
             }
 
-            val javaPaymentMethod = JavaPaymentMethod.create(pmParamsBuilder.build())
+            val javaPaymentMethod = JavaPaymentMethod.create(pmParamsBuilder.build(), requestOptions)
             javaPaymentMethod.toKmpPaymentMethod()
         }
     }
@@ -234,7 +234,7 @@ public actual class Stripe private constructor(
     public actual suspend fun retrievePaymentMethod(paymentMethodId: String): StripeResult<PaymentMethod> =
         withContext(Dispatchers.IO) {
             StripeResult.runCatching {
-                val javaPaymentMethod = JavaPaymentMethod.retrieve(paymentMethodId)
+                val javaPaymentMethod = JavaPaymentMethod.retrieve(paymentMethodId, requestOptions)
                 javaPaymentMethod.toKmpPaymentMethod()
             }
         }
@@ -248,7 +248,7 @@ public actual class Stripe private constructor(
             StripeResult.runCatching {
                 // Extract the payment intent ID from the client secret
                 val paymentIntentId = clientSecret.substringBefore("_secret_")
-                val javaPaymentIntent = JavaPaymentIntent.retrieve(paymentIntentId)
+                val javaPaymentIntent = JavaPaymentIntent.retrieve(paymentIntentId, requestOptions)
                 javaPaymentIntent.toKmpPaymentIntent()
             }
         }
@@ -259,13 +259,13 @@ public actual class Stripe private constructor(
     ): StripeResult<PaymentIntent> = withContext(Dispatchers.IO) {
         StripeResult.runCatching {
             val paymentIntentId = params.clientSecret.substringBefore("_secret_")
-            val javaPaymentIntent = JavaPaymentIntent.retrieve(paymentIntentId)
+            val javaPaymentIntent = JavaPaymentIntent.retrieve(paymentIntentId, requestOptions)
 
             val confirmParams = JavaPaymentIntentConfirmParams.builder()
             params.paymentMethodId?.let { confirmParams.setPaymentMethod(it) }
             params.returnUrl?.let { confirmParams.setReturnUrl(it) }
 
-            val confirmed = javaPaymentIntent.confirm(confirmParams.build())
+            val confirmed = javaPaymentIntent.confirm(confirmParams.build(), requestOptions)
             confirmed.toKmpPaymentIntent()
         }
     }
@@ -288,7 +288,7 @@ public actual class Stripe private constructor(
         withContext(Dispatchers.IO) {
             StripeResult.runCatching {
                 val setupIntentId = clientSecret.substringBefore("_secret_")
-                val javaSetupIntent = JavaSetupIntent.retrieve(setupIntentId)
+                val javaSetupIntent = JavaSetupIntent.retrieve(setupIntentId, requestOptions)
                 javaSetupIntent.toKmpSetupIntent()
             }
         }
@@ -299,13 +299,13 @@ public actual class Stripe private constructor(
     ): StripeResult<SetupIntent> = withContext(Dispatchers.IO) {
         StripeResult.runCatching {
             val setupIntentId = params.clientSecret.substringBefore("_secret_")
-            val javaSetupIntent = JavaSetupIntent.retrieve(setupIntentId)
+            val javaSetupIntent = JavaSetupIntent.retrieve(setupIntentId, requestOptions)
 
             val confirmParams = JavaSetupIntentConfirmParams.builder()
             params.paymentMethodId?.let { confirmParams.setPaymentMethod(it) }
             params.returnUrl?.let { confirmParams.setReturnUrl(it) }
 
-            val confirmed = javaSetupIntent.confirm(confirmParams.build())
+            val confirmed = javaSetupIntent.confirm(confirmParams.build(), requestOptions)
             confirmed.toKmpSetupIntent()
         }
     }
@@ -340,7 +340,7 @@ public actual class Stripe private constructor(
     public suspend fun retrieveCustomer(customerId: String): StripeResult<Customer> =
         withContext(Dispatchers.IO) {
             StripeResult.runCatching {
-                val javaCustomer = JavaCustomer.retrieve(customerId)
+                val javaCustomer = JavaCustomer.retrieve(customerId, requestOptions)
                 Customer(
                     id = javaCustomer.id,
                     email = javaCustomer.email,
@@ -375,7 +375,7 @@ public actual class Stripe private constructor(
                     .setStripeVersion(params.stripeVersion)
                     .build()
 
-                val javaKey = JavaEphemeralKey.create(keyParams)
+                val javaKey = JavaEphemeralKey.create(keyParams, requestOptions)
                 EphemeralKey(
                     id = javaKey.id,
                     secret = javaKey.secret,
