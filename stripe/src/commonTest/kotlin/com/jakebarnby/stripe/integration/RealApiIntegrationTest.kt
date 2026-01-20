@@ -33,9 +33,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createCardToken(params)
-
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
-        val token = result.getOrNull()!!
+        val token = assertSuccess(result, "Expected success")
 
         assertTrue(token.id.startsWith("tok_"), "Token ID should start with 'tok_': ${token.id}")
         assertEquals("card", token.type)
@@ -58,9 +56,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createCardToken(params)
-
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
-        val token = result.getOrNull()!!
+        val token = assertSuccess(result, "Expected success")
 
         assertEquals("5555", token.card?.last4)
         assertEquals("mastercard", token.card?.brand)
@@ -79,9 +75,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createCardToken(params)
-
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
-        val token = result.getOrNull()!!
+        val token = assertSuccess(result, "Expected success")
 
         assertEquals("0005", token.card?.last4)
         assertEquals("amex", token.card?.brand)
@@ -107,7 +101,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
         val result = stripe.createCardToken(params)
 
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
+        assertSuccess(result, "Expected success")
         assertNotNull(result.getOrNull())
     }
 
@@ -144,13 +138,11 @@ class RealApiIntegrationTest : IntegrationTestBase() {
 
         // First request
         val result1 = stripe.createCardToken(params, idempotencyKey)
-        assertTrue(result1.isSuccess())
-        val token1 = result1.getOrNull()!!
+        val token1 = assertSuccess(result1, "First request should succeed")
 
         // Second request with same idempotency key should return same token
         val result2 = stripe.createCardToken(params, idempotencyKey)
-        assertTrue(result2.isSuccess())
-        val token2 = result2.getOrNull()!!
+        val token2 = assertSuccess(result2, "Second request should succeed")
 
         assertEquals(token1.id, token2.id, "Idempotent requests should return same token")
     }
@@ -169,9 +161,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createPaymentMethod(params)
-
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
-        val paymentMethod = result.getOrNull()!!
+        val paymentMethod = assertSuccess(result, "Expected success")
 
         assertTrue(paymentMethod.id.startsWith("pm_"), "Payment method ID should start with 'pm_': ${paymentMethod.id}")
         assertEquals(PaymentMethodType.CARD, paymentMethod.type)
@@ -208,9 +198,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createPaymentMethod(params)
-
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
-        val paymentMethod = result.getOrNull()!!
+        val paymentMethod = assertSuccess(result, "Expected success")
 
         assertNotNull(paymentMethod.billingDetails)
         assertEquals("John Doe", paymentMethod.billingDetails?.name)
@@ -230,15 +218,12 @@ class RealApiIntegrationTest : IntegrationTestBase() {
             cvc = "314"
         )
         val tokenResult = stripe.createCardToken(cardParams)
-        assertTrue(tokenResult.isSuccess())
-        val token = tokenResult.getOrNull()!!
+        val token = assertSuccess(tokenResult, "Token creation should succeed")
 
         // Then create payment method from token
         val pmParams = PaymentMethodCreateParams.createCardFromToken(token.id)
         val result = stripe.createPaymentMethod(pmParams)
-
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
-        val paymentMethod = result.getOrNull()!!
+        val paymentMethod = assertSuccess(result, "Payment method creation from token should succeed")
 
         assertEquals(PaymentMethodType.CARD, paymentMethod.type)
         assertEquals("4242", paymentMethod.card?.last4)
@@ -257,8 +242,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
             cvc = "314"
         )
         val createResult = stripe.createPaymentMethod(createParams)
-        assertTrue(createResult.isSuccess())
-        val createdPm = createResult.getOrNull()!!
+        val createdPm = assertSuccess(createResult, "Payment method creation should succeed")
 
         // Then retrieve it
         val retrieveResult = stripe.retrievePaymentMethod(createdPm.id)
@@ -290,9 +274,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
         val params = SourceParams.createCardParams(cardParams)
 
         val result = stripe.createSource(params)
-
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
-        val source = result.getOrNull()!!
+        val source = assertSuccess(result, "Expected success")
 
         assertTrue(source.id.startsWith("src_"), "Source ID should start with 'src_': ${source.id}")
         assertEquals(SourceType.CARD, source.type)
@@ -353,9 +335,7 @@ class RealApiIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createBankAccountToken(params)
-
-        assertTrue(result.isSuccess(), "Expected success but got: ${result.errorOrNull()?.message}")
-        val token = result.getOrNull()!!
+        val token = assertSuccess(result, "Expected success")
 
         assertTrue(token.id.startsWith("btok_"), "Bank token ID should start with 'btok_': ${token.id}")
         assertEquals("bank_account", token.type)

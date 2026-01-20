@@ -27,9 +27,7 @@ public class TokenIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createCardToken(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful token creation")
-        val token = result.value
+        val token = assertSuccess(result, "Expected successful token creation")
         assertNotNull(token.id, "Token ID should not be null")
         assertTrue(token.id.startsWith("tok_"), "Token ID should start with 'tok_'")
         assertNotNull(token.card, "Card details should be present")
@@ -71,9 +69,7 @@ public class TokenIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createCardToken(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful token creation")
-        val token = result.value
+        val token = assertSuccess(result, "Expected successful token creation")
         assertTrue(token.id.startsWith("tok_"), "Token ID should start with 'tok_'")
         assertTrue(token.card!!.last4 == "4444", "Last 4 digits should match Mastercard")
     }
@@ -91,9 +87,7 @@ public class TokenIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createCardToken(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful token creation")
-        val token = result.value
+        val token = assertSuccess(result, "Expected successful token creation")
         assertTrue(token.id.startsWith("tok_"), "Token ID should start with 'tok_'")
         assertTrue(token.card!!.last4 == "0005", "Last 4 digits should match Amex")
     }
@@ -113,9 +107,7 @@ public class TokenIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createBankAccountToken(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful bank account token creation")
-        val token = result.value
+        val token = assertSuccess(result, "Expected successful bank account token creation")
         assertNotNull(token.id, "Token ID should not be null")
         assertTrue(token.id.startsWith("btok_"), "Bank account token ID should start with 'btok_'")
         assertNotNull(token.bankAccount, "Bank account details should be present")
@@ -136,9 +128,7 @@ public class TokenIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createCardToken(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful token creation")
-        val token = result.value
+        val token = assertSuccess(result, "Expected successful token creation")
         assertTrue(token.id.startsWith("tok_"), "Token ID should start with 'tok_'")
         // Note: Card name might not be returned in all token responses
     }
@@ -161,9 +151,7 @@ public class TokenIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createCardToken(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful token creation")
-        val token = result.value
+        val token = assertSuccess(result, "Expected successful token creation")
         assertTrue(token.id.startsWith("tok_"), "Token ID should start with 'tok_'")
     }
 }
