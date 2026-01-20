@@ -16,7 +16,7 @@ kotlin = "2.3.0"
 kover = "0.9.1"
 kotlinx-atomicfu = "0.29.0"
 kotlinx-coroutines = "1.10.2"
-stripe-android = "22.5.0"
+stripe-android = "22.6.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
