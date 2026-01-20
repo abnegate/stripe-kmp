@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-import sdk.composeapp.generated.resources.Res
-import sdk.composeapp.generated.resources.compose_multiplatform
+import stripe_kmp.composeapp.generated.resources.Res
+import stripe_kmp.composeapp.generated.resources.compose_multiplatform
 
 @Composable
 @Preview

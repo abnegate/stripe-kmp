@@ -305,6 +305,7 @@ public data class SourceParams(
          *
          * @param name Account holder name
          * @param iban IBAN number
+         * @param email Email address
          * @param addressLine1 Address line 1
          * @param city City
          * @param postalCode Postal code
@@ -313,6 +314,7 @@ public data class SourceParams(
         public fun createSepaDebitParams(
             name: String,
             iban: String,
+            email: String? = null,
             addressLine1: String? = null,
             city: String? = null,
             postalCode: String? = null,
@@ -323,6 +325,7 @@ public data class SourceParams(
                 currency = "eur",
                 owner = SourceOwner(
                     name = name,
+                    email = email,
                     address = Address(
                         line1 = addressLine1,
                         city = city,

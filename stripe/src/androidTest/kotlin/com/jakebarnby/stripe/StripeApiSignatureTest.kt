@@ -110,17 +110,8 @@ class StripeApiSignatureTest {
         assertNotNull(handleNextActionForSetupIntentMethod)
     }
 
-    @Test
-    fun verifyStripeCustomerMethods() {
-        // Verify Customer methods
-        val retrieveCustomerMethod: suspend Stripe.(String) -> StripeResult<Customer> =
-            Stripe::retrieveCustomer
-        assertNotNull(retrieveCustomerMethod)
-
-        val createEphemeralKeyMethod: suspend Stripe.(EphemeralKeyCreateParams) -> StripeResult<EphemeralKey> =
-            Stripe::createEphemeralKey
-        assertNotNull(createEphemeralKeyMethod)
-    }
+    // Customer methods (retrieveCustomer, createEphemeralKey) are JVM-only
+    // Server-side methods are not available in common code
 
     @Test
     fun verifyStripeConfigurationProperty() {

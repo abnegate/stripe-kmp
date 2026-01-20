@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kover)
     alias(libs.plugins.mavenPublish)
+    alias(libs.plugins.kotlinSerialization)
     kotlin("native.cocoapods")
 }
 
@@ -14,6 +15,8 @@ version = "1.0.0"
 
 // BUILD-03: Enable explicit API mode
 kotlin {
+    applyDefaultHierarchyTemplate()
+
     explicitApi()
 
     androidTarget {
@@ -33,29 +36,41 @@ kotlin {
             baseName = "StripeKMP"
             isStatic = true
         }
+    }
 
-        // Note: Swift bridge is provided as reference implementation in iosApp/
-        // For production use, implement the bridge in your iOS app project
+    // XCFramework for SPM distribution
+    val xcfTask = tasks.register("assembleXCFramework") {
+        dependsOn("linkReleaseFrameworkIosArm64", "linkReleaseFrameworkIosSimulatorArm64", "linkReleaseFrameworkIosX64")
+
+        doLast {
+            val outputDir = layout.buildDirectory.dir("XCFramework").get().asFile
+            outputDir.deleteRecursively()
+
+            exec {
+                commandLine(
+                    "xcodebuild", "-create-xcframework",
+                    "-framework", layout.buildDirectory.file("bin/iosArm64/releaseFramework/StripeKMP.framework").get().asFile.absolutePath,
+                    "-framework", layout.buildDirectory.file("bin/iosSimulatorArm64/releaseFramework/StripeKMP.framework").get().asFile.absolutePath,
+                    "-framework", layout.buildDirectory.file("bin/iosX64/releaseFramework/StripeKMP.framework").get().asFile.absolutePath,
+                    "-output", outputDir.resolve("StripeKMP.xcframework").absolutePath
+                )
+            }
+        }
     }
 
     cocoapods {
         summary = "Kotlin Multiplatform wrapper for Stripe SDK"
         homepage = "https://github.com/jakebarnby/stripe-kmp"
-        // MEDIUM-07: Document iOS SDK version
         ios.deploymentTarget = "13.0"
         framework {
             baseName = "StripeKMP"
             isStatic = true
         }
 
-        // iOS Stripe SDK version: 24.5.0
-        // Note: This should be kept in sync with Android version where possible
+        // Stripe iOS SDK for PaymentSheet UI
+        // Headless operations use REST API via Ktor
         pod("StripePaymentSheet") {
-            version = "24.5.0"
-            extraOpts += listOf("-compiler-option", "-fmodules")
-        }
-        pod("StripeFinancialConnections") {
-            version = "24.5.0"
+            version = "25.5.0"
             extraOpts += listOf("-compiler-option", "-fmodules")
         }
     }
@@ -70,6 +85,12 @@ kotlin {
         browser()
     }
 
+    jvm {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
@@ -79,26 +100,85 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.json)
+            implementation(libs.kotlinx.serialization.json)
         }
 
-        androidMain.dependencies {
-            implementation(libs.stripe.android)
-            implementation(libs.stripe.financial.connections)
-            implementation(libs.stripe.identity)
-            implementation(libs.androidx.core.ktx)
+        val androidUnitTest by getting {
+            dependencies {
+                implementation(libs.kotlin.testJunit)
+                implementation(libs.junit)
+                implementation(libs.robolectric)
+            }
         }
 
-        iosMain.dependencies {
-            // iOS uses CocoaPods for Stripe SDK
+        val clientMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                // Common Ktor dependencies for REST API
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.json)
+                implementation(libs.kotlinx.serialization.json)
+            }
         }
 
-        jsMain.dependencies {
-            // Stripe.js npm package for module-based loading
-            implementation(npm("@stripe/stripe-js", "2.4.0"))
+        val applePayMain by creating {
+            dependsOn(clientMain)
         }
 
-        wasmJsMain.dependencies {
-            // WASM will use similar approach to JS
+        val googlePayMain by creating {
+            dependsOn(clientMain)
+        }
+
+        androidMain {
+            dependsOn(clientMain)
+            dependsOn(googlePayMain)
+            dependencies {
+                // Ktor engine for Android
+                implementation(libs.ktor.client.okhttp)
+                // Native SDK for UI components only
+                api(libs.stripe.android)
+                api(libs.stripe.financial.connections)
+                api(libs.stripe.identity)
+                implementation(libs.androidx.core.ktx)
+            }
+        }
+
+        val iosMain by getting {
+            dependsOn(clientMain)
+            dependsOn(applePayMain)
+            dependencies {
+                // Ktor engine for iOS
+                implementation(libs.ktor.client.darwin)
+            }
+        }
+
+        jsMain {
+            dependsOn(clientMain)
+            dependsOn(applePayMain)
+            dependsOn(googlePayMain)
+            dependencies {
+                // Ktor engine for JS
+                implementation(libs.ktor.client.js)
+                // Stripe.js for UI components
+                implementation(npm("@stripe/stripe-js", "5.5.0"))
+            }
+        }
+
+        wasmJsMain {
+            dependsOn(clientMain)
+            dependsOn(applePayMain)
+            dependsOn(googlePayMain)
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
+        }
+
+        jvmMain.dependencies {
+            api(libs.stripe.java)
         }
     }
 }
@@ -125,6 +205,10 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
+
     lint {
         // Disable RestrictedApi check - required for wrapper library accessing Stripe SDK internals
         disable += "RestrictedApi"
@@ -143,13 +227,12 @@ kover {
                 // Exclude platform-specific implementations that require real SDK/Activity
                 classes(
                     // Android implementations requiring Activity/Context
+                    "com.jakebarnby.stripe.Stripe",
+                    "com.jakebarnby.stripe.Stripe_androidKt",
+                    "com.jakebarnby.stripe.Stripe_jvmKt",
                     "com.jakebarnby.stripe.Stripe\$*",
-                    "com.jakebarnby.stripe.PaymentSheet\$*",
-                    "com.jakebarnby.stripe.PaymentAuthenticator\$*",
-                    "com.jakebarnby.stripe.GooglePayLauncher\$*",
                     "com.jakebarnby.stripe.ApplePayLauncher\$*",
-                    "com.jakebarnby.stripe.FinancialConnectionsSheet\$*",
-                    "com.jakebarnby.stripe.IdentityVerificationSheet\$*",
+                    "com.jakebarnby.stripe.HttpClientEngine_androidKt",
                     // Android mappers (require real Stripe SDK types)
                     "com.jakebarnby.stripe.AndroidMappersKt*",
                     // Generated code

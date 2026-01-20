@@ -256,9 +256,6 @@ public actual class PaymentAuthenticator private constructor() {
         )
     }
 
-    // ============================================================================
-    // Private helper methods
-    // ============================================================================
 
     /**
      * Handle payment authentication flow with Activity integration using PaymentLauncher.

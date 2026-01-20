@@ -116,47 +116,6 @@ public actual class ApplePayLauncher {
     }
 }
 
-/**
- * GooglePayLauncher is not available on iOS.
- *
- * Google Pay is an Android-only payment method. iOS users should use Apple Pay instead.
- */
-public actual class GooglePayLauncher {
-    public actual suspend fun presentForPaymentIntent(
-        clientSecret: String,
-        configuration: GooglePayConfiguration
-    ): WalletPaymentResult {
-        return WalletPaymentResult.Failed(
-            StripeException("Google Pay is not available on iOS. Use Apple Pay instead.")
-        )
-    }
-
-    public actual suspend fun presentForSetupIntent(
-        clientSecret: String,
-        configuration: GooglePayConfiguration
-    ): WalletPaymentResult {
-        return WalletPaymentResult.Failed(
-            StripeException("Google Pay is not available on iOS. Use Apple Pay instead.")
-        )
-    }
-
-    public actual suspend fun createPaymentMethod(
-        configuration: GooglePayConfiguration,
-        request: WalletPaymentRequest
-    ): WalletPaymentResult {
-        return WalletPaymentResult.Failed(
-            StripeException("Google Pay is not available on iOS. Use Apple Pay instead.")
-        )
-    }
-
-    public actual companion object {
-        public actual fun isAvailable(context: Any?): Boolean = false
-    }
-}
-
-// ============================================================================
-// Helper Extensions for PassKit Integration
-// ============================================================================
 
 /**
  * Convert CardBrand to PKPaymentNetwork string constant.

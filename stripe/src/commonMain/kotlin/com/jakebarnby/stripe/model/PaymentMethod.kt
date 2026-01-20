@@ -299,6 +299,23 @@ public data class PaymentMethodCreateParams(
                 metadata = mapOf("iban" to iban)
             )
         }
+
+        /**
+         * Create parameters for a card payment method using a token.
+         *
+         * @param token Token ID (tok_xxx)
+         * @param billingDetails Optional billing details
+         */
+        public fun createCardFromToken(
+            token: String,
+            billingDetails: BillingDetails? = null
+        ): PaymentMethodCreateParams {
+            return PaymentMethodCreateParams(
+                type = PaymentMethodType.CARD,
+                billingDetails = billingDetails,
+                card = CardPaymentMethodCreateParams(token = token)
+            )
+        }
     }
 }
 

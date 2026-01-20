@@ -3,53 +3,87 @@
 [![CI](https://github.com/jakebarnby/stripe-kmp/actions/workflows/ci.yml/badge.svg)](https://github.com/jakebarnby/stripe-kmp/actions/workflows/ci.yml)
 [![Release](https://github.com/jakebarnby/stripe-kmp/actions/workflows/release.yml/badge.svg)](https://github.com/jakebarnby/stripe-kmp/actions/workflows/release.yml)
 
-Kotlin Multiplatform wrapper for Stripe SDK.
+Kotlin Multiplatform wrapper for Stripe SDK providing a unified API across Android, iOS, Web (JS), and Server (JVM).
 
-This is a Kotlin Multiplatform project targeting Android, iOS, Web, Desktop (JVM).
+## Installation
 
-## Features
+### Gradle (Kotlin DSL)
 
-The Stripe KMP library provides a unified API for Stripe payments across all platforms:
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("com.jakebarnby.stripe:stripe-kmp:1.0.0")
+}
+```
 
-- **Payment Methods**: Create and manage payment methods (cards, bank accounts, etc.)
-- **Payment Intents**: Create and confirm payment intents with 3D Secure support
-- **Setup Intents**: Set up payment methods for future use
-- **Sources**: Create and manage payment sources (legacy API)
-- **Tokens**: Tokenize sensitive payment data
-- **Authentication**: Handle 3D Secure and other authentication flows
+### Platform-Specific Requirements
 
-### Platform Support
+#### Android
 
-| Feature | Android | iOS | Web (JS) | Desktop (JVM) |
-|---------|---------|-----|----------|---------------|
-| Payment Methods | ✓ | ✓ | ✓ | ✓ |
-| Payment Intents | ✓ | ✓ | ✓ | ✓ |
-| Setup Intents | ✓ | ✓ | ✓ | ✓ |
-| Sources | ✓ | ✓ | ✓ | ✓ |
-| Tokens | ✓ | ✓ | ✓ | ✓ |
-| 3D Secure | ✓ | ✓ | ✓ | ✓ |
-| Payment Sheet | ✓ | ✓ | ✓ | - |
-| Apple Pay | - | ✓ | ✓ | - |
-| Google Pay | ✓ | - | ✓ | - |
+No additional setup required. The Stripe Android SDK is included as a transitive dependency.
 
-## JavaScript/Web Implementation
+#### iOS
 
-The JavaScript implementation uses Stripe.js for browser-based payments. All methods are production-ready and handle:
+This library is intended to be consumed from Kotlin Multiplatform via Gradle.
+It does not provide a standalone SPM or CocoaPods distribution. iOS frameworks
+are produced as part of your KMP app build, and the Stripe iOS SDK dependencies
+are wired via the library's CocoaPods configuration.
 
-- Asynchronous loading of Stripe.js from CDN
-- Promise-to-coroutine conversion for Kotlin/JS interop
-- Proper error handling and validation
-- Type-safe conversion between JavaScript objects and Kotlin data classes
-- 3D Secure authentication flows
+#### Web (JS)
 
-### Quick Start (Web)
+No additional setup required. Stripe.js is loaded automatically from CDN.
+
+#### Web (WASM)
+
+Headless REST operations use Ktor CIO. Stripe.js is not used on WASM and UI flows
+(PaymentSheet, 3DS, Apple Pay, Google Pay) are not supported. Browser-hosted WASM
+is subject to CORS, so use the JS target for production web apps.
+
+#### Server (JVM)
+
+No additional setup required. The Stripe Java SDK is included as a transitive dependency.
+
+## SDK Versions
+
+| Platform | SDK | Version |
+|----------|-----|---------|
+| Android | com.stripe:stripe-android | 22.6.0 |
+| Android | com.stripe:financial-connections | 22.6.0 |
+| Android | com.stripe:identity | 22.6.0 |
+| iOS | StripePaymentSheet (CocoaPods) | 25.5.0 |
+| iOS | StripeFinancialConnections (CocoaPods) | 25.5.0 |
+| Web (JS) | @stripe/stripe-js (npm) | 5.5.0 |
+| Web (WASM) | Ktor CIO engine | 3.1.1 |
+| Server | com.stripe:stripe-java | 28.2.0 |
+
+## Platform Support
+
+| Feature | Android | iOS | Web (JS) | WASM | Server (JVM) |
+|---------|:-------:|:---:|:--------:|:----:|:------------:|
+| Payment Methods | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Payment Intents | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Setup Intents | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Sources | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Tokens | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 3D Secure | ✓ | ✓ | ✓ | - | ✓ |
+| Payment Sheet | ✓ | ✓ | ✓ | - | - |
+| Apple Pay | - | ✓ | ✓ | - | - |
+| Google Pay | ✓ | - | ✓ | - | - |
+| Customer Retrieval | - | - | - | - | ✓ |
+| Ephemeral Keys | - | - | - | - | ✓ |
+
+> **Note**: WASM support is experimental. Headless REST operations require a host that can reach the Stripe API; browser builds may be blocked by CORS. Use the JS target for production web applications.
+
+## Quick Start
+
+### Client-Side (Android/iOS/Web)
 
 ```kotlin
 import com.jakebarnby.stripe.Stripe
 import com.jakebarnby.stripe.model.*
 
-// Initialize Stripe
-val stripe = Stripe.initializeAndAwait(
+// Initialize Stripe with your publishable key
+val stripe = Stripe.initialize(
     StripeConfiguration(
         publishableKey = "pk_test_...",
         enableLogging = true
@@ -86,144 +120,145 @@ if (paymentIntent.status == PaymentIntentStatus.REQUIRES_ACTION) {
 }
 ```
 
-### Implemented JavaScript Methods
+### Server-Side (JVM Only)
 
-All methods use Stripe.js APIs under the hood:
-
-1. **createPaymentMethod()** - Uses `stripe.createPaymentMethod()`
-2. **createSource()** - Uses `stripe.createSource()`
-3. **confirmPaymentIntent()** - Uses `stripe.confirmCardPayment()`
-4. **confirmSetupIntent()** - Uses `stripe.confirmCardSetup()`
-5. **retrievePaymentIntent()** - Uses `stripe.retrievePaymentIntent()`
-6. **retrieveSetupIntent()** - Uses `stripe.retrieveSetupIntent()`
-7. **handleNextActionForPayment()** - Uses `stripe.handleCardAction()`
-8. **handleNextActionForSetupIntent()** - Uses `stripe.handleCardSetup()`
-
-### Authentication Flow
-
-The library automatically handles 3D Secure and other authentication challenges:
+The JVM target includes additional server-only methods that are **not available** on client platforms (Android, iOS, Web). These methods require a secret API key and should only be used on your backend.
 
 ```kotlin
-val authenticator = PaymentAuthenticator.getInstance()
+import com.jakebarnby.stripe.Stripe
+import com.jakebarnby.stripe.model.*
 
-// Authenticate a payment intent
-val result = authenticator.authenticatePayment(
-    activity = Unit, // Not used in JS
-    clientSecret = "pi_xxx_secret_xxx"
+// Initialize with your secret key (server-side only!)
+val stripe = Stripe.initialize(
+    StripeConfiguration(
+        publishableKey = "sk_test_...", // Use secret key on server
+        enableLogging = true
+    )
 )
 
-when (result) {
-    is AuthenticationResult.Completed -> {
-        println("Payment succeeded: ${result.paymentIntent?.status}")
-    }
-    is AuthenticationResult.Failed -> {
-        println("Authentication failed: ${result.error.message}")
-    }
-    is AuthenticationResult.Canceled -> {
-        println("User canceled authentication")
-    }
-}
+// Server-only: Retrieve a customer
+val customer = stripe.retrieveCustomer("cus_xxx").getOrThrow()
+println("Customer: ${customer.name} (${customer.email})")
+
+// Server-only: Create an ephemeral key for mobile SDK
+val ephemeralKey = stripe.createEphemeralKey(
+    EphemeralKeyCreateParams(
+        customerId = "cus_xxx",
+        stripeVersion = "2023-10-16"
+    )
+).getOrThrow()
 ```
 
-### Error Handling
+> **Important**: `retrieveCustomer()` and `createEphemeralKey()` are only available on the JVM target. Attempting to use these methods from common code will result in a compile-time error, ensuring you don't accidentally expose secret key operations to client apps.
 
-All methods return `StripeResult<T>` which is either Success or Failure:
+## API Reference
+
+### Common Methods (All Platforms)
+
+#### Token Creation
+- `createCardToken(params: CardParams)` - Tokenize card data
+- `createBankAccountToken(params: BankAccountTokenParams)` - Tokenize bank account
+- `createPiiToken(params: PiiTokenParams)` - Tokenize PII data
+- `createAccountToken(params: AccountParams)` - Create account token
+
+#### Source Management
+- `createSource(params: SourceParams)` - Create a payment source
+- `retrieveSource(sourceId: String, clientSecret: String)` - Retrieve a source
+
+#### Payment Methods
+- `createPaymentMethod(params: PaymentMethodCreateParams)` - Create a payment method
+- `retrievePaymentMethod(paymentMethodId: String)` - Retrieve a payment method
+
+#### Payment Intents
+- `retrievePaymentIntent(clientSecret: String)` - Retrieve a payment intent
+- `confirmPaymentIntent(params: ConfirmPaymentIntentParams)` - Confirm a payment
+- `handleNextActionForPayment(clientSecret: String)` - Handle 3DS authentication
+
+#### Setup Intents
+- `retrieveSetupIntent(clientSecret: String)` - Retrieve a setup intent
+- `confirmSetupIntent(params: ConfirmSetupIntentParams)` - Confirm a setup intent
+- `handleNextActionForSetupIntent(clientSecret: String)` - Handle 3DS for setup
+
+### Server-Only Methods (JVM)
+
+These methods are **only available on the JVM target** and will not compile on other platforms:
+
+- `retrieveCustomer(customerId: String)` - Retrieve customer details
+- `createEphemeralKey(params: EphemeralKeyCreateParams)` - Create ephemeral key for mobile SDK
+
+## Error Handling
+
+All methods return `StripeResult<T>` which provides safe error handling:
 
 ```kotlin
 val result = stripe.createPaymentMethod(params)
 
+// Functional style
 result.onSuccess { paymentMethod ->
-    println("Payment method created: ${paymentMethod.id}")
+    println("Success: ${paymentMethod.id}")
 }.onFailure { error ->
     println("Error: ${error.message}")
 }
 
-// Or use getOrThrow() for exceptions
+// Or get value directly (throws on failure)
 val paymentMethod = result.getOrThrow()
+
+// Or get nullable
+val paymentMethodOrNull = result.getOrNull()
 ```
 
-### Important Notes
+## Web-Specific Notes
 
-- Stripe.js loads asynchronously from CDN. Use `initializeAndAwait()` to wait for it to load.
-- Idempotency keys are not supported in client-side operations (ignored with warning).
-- PCI compliance: Never log or store raw card numbers. Use tokens or payment methods.
-- The library handles all JavaScript interop, null safety, and type conversions automatically.
+### Stripe.js Loading
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-    - [commonMain](./composeApp/src/commonMain/kotlin) is for code that's common for all targets.
-    - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-      For example, if you want to use Apple's CoreCrypto for the iOS part of your Kotlin app,
-      the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-      Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-      folder is the appropriate location.
+For web targets, Stripe.js loads asynchronously from CDN. Use `initializeAndAwait()` to ensure it's ready:
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you're sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+```kotlin
+val stripe = Stripe.initializeAndAwait(
+    StripeConfiguration(publishableKey = "pk_test_...")
+)
+```
 
-### Build and Run Android Application
+### Idempotency Keys
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE's toolbar or build it directly from the terminal:
+Idempotency keys are not supported in client-side Stripe.js operations and will be ignored with a warning.
 
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+## Architecture
 
-### Build and Run Desktop (JVM) Application
+The library uses Kotlin Multiplatform's `expect`/`actual` mechanism:
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE's toolbar or run it directly from the terminal:
+```
+commonMain/
+├── Stripe.kt          # expect class with common API
+├── model/             # Shared data models
+└── ...
 
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+androidMain/
+└── Stripe.android.kt  # actual implementation using Stripe Android SDK
 
-### Build and Run Web Application
+iosMain/
+└── Stripe.ios.kt      # actual implementation using Swift bridge
 
-To build and run the development version of the web app, use the run configuration from the run widget
-in your IDE's toolbar or run it directly from the terminal:
+jsMain/
+└── Stripe.js.kt       # actual implementation using Stripe.js
 
-- for the Wasm target (faster, modern browsers):
-    - on macOS/Linux
-      ```shell
-      ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
-      ```
-    - on Windows
-      ```shell
-      .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
-      ```
-- for the JS target (slower, supports older browsers):
-    - on macOS/Linux
-      ```shell
-      ./gradlew :composeApp:jsBrowserDevelopmentRun
-      ```
-    - on Windows
-      ```shell
-      .\gradlew.bat :composeApp:jsBrowserDevelopmentRun
-      ```
+jvmMain/
+└── Stripe.jvm.kt      # actual implementation using Stripe Java SDK
+                       # + server-only methods
+```
 
-### Build and Run iOS Application
+## Security
 
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE's toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+- **Never expose secret keys** in client applications
+- Server-only methods (`retrieveCustomer`, `createEphemeralKey`) are compile-time restricted to JVM
+- Use publishable keys (`pk_*`) on client platforms
+- Use secret keys (`sk_*`) only on server (JVM target)
+- The library handles PCI compliance by tokenizing card data before transmission
 
----
+## License
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html),
-[Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform/#compose-multiplatform),
-[Kotlin/Wasm](https://kotl.in/wasm/)…
+MIT License - see [LICENSE](LICENSE) for details.
 
-We would appreciate your feedback on Compose/Web and Kotlin/Wasm in the public Slack
-channel [#compose-web](https://slack-chats.kotlinlang.org/c/compose-web).
-If you face any issues, please report them on [YouTrack](https://youtrack.jetbrains.com/newIssue?project=CMP).
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines before submitting PRs.

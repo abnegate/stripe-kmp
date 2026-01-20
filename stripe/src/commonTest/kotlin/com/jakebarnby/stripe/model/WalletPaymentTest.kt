@@ -4,9 +4,6 @@ import kotlin.test.*
 
 class WalletPaymentTest {
 
-    // ============================================================================
-    // GooglePayConfiguration Tests
-    // ============================================================================
 
     @Test
     fun testGooglePayConfiguration_validConfiguration() {
@@ -108,9 +105,6 @@ class WalletPaymentTest {
         assertTrue(config.emailRequired)
     }
 
-    // ============================================================================
-    // ApplePayConfiguration Tests
-    // ============================================================================
 
     @Test
     fun testApplePayConfiguration_validConfiguration() {
@@ -225,9 +219,6 @@ class WalletPaymentTest {
         assertEquals(1, config.requiredBillingContactFields.size)
     }
 
-    // ============================================================================
-    // WalletPaymentRequest Tests
-    // ============================================================================
 
     @Test
     fun testWalletPaymentRequest_validRequest() {
@@ -319,9 +310,6 @@ class WalletPaymentTest {
         assertEquals("DE", request.countryCode)
     }
 
-    // ============================================================================
-    // WalletPaymentResult Tests
-    // ============================================================================
 
     @Test
     fun testWalletPaymentResult_success() {
@@ -382,9 +370,6 @@ class WalletPaymentTest {
         assertEquals("Payment failed", result.error.message)
     }
 
-    // ============================================================================
-    // Enum Tests
-    // ============================================================================
 
     @Test
     fun testGooglePayEnvironment_values() {

@@ -1,45 +1,20 @@
 package com.jakebarnby.stripe
 
 /**
- * Android Stripe SDK Implementation
+ * Android Stripe SDK Implementation using shared REST API client.
  *
- * THREADING MODEL:
- * This implementation uses `withContext(Dispatchers.IO)` for all blocking SDK operations.
- * The Stripe Android SDK provides synchronous methods (e.g., createCardTokenSynchronous)
- * that are designed to be called off the main thread.
+ * Headless operations (tokens, payment methods, intents) use the REST API via Ktor.
+ * UI components (PaymentSheet, Google Pay) use the native Stripe Android SDK.
  *
- * Dispatchers.IO is appropriate here because:
- * - It provides an elastic thread pool that grows as needed (up to 64 threads by default)
- * - It's specifically designed for blocking I/O operations
- * - Network I/O from Stripe SDK is handled efficiently
- *
- * Alternative approaches considered:
- * - Using callback-based async APIs with suspendCancellableCoroutine: More complex,
- *   requires managing callback lifecycle, but avoids blocking threads entirely.
- * - For high-throughput scenarios, consider using the callback APIs directly.
+ * NOTE: The Stripe Android SDK is still included as a dependency for UI components
+ * like PaymentSheet, GooglePayLauncher, and PaymentAuthenticator.
  */
 import android.content.Context
 import com.jakebarnby.stripe.model.*
 import com.stripe.android.PaymentConfiguration
 import com.stripe.android.Stripe as AndroidStripe
-import com.stripe.android.model.CardParams as AndroidCardParams
-import com.stripe.android.model.BankAccountTokenParams as AndroidBankAccountTokenParams
-import com.stripe.android.model.ConfirmPaymentIntentParams as AndroidConfirmPaymentIntentParams
-import com.stripe.android.model.ConfirmSetupIntentParams as AndroidConfirmSetupIntentParams
-import com.stripe.android.model.PaymentIntent as AndroidPaymentIntent
-import com.stripe.android.model.PaymentMethod as AndroidPaymentMethod
-import com.stripe.android.model.PaymentMethodCreateParams as AndroidPaymentMethodCreateParams
-import com.stripe.android.model.SetupIntent as AndroidSetupIntent
-import com.stripe.android.model.Source as AndroidSource
-import com.stripe.android.model.SourceParams as AndroidSourceParams
-import com.stripe.android.model.Token as AndroidToken
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.resume
 
-// CRITICAL-06: Use AtomicReference for thread-safe global state
 private val appContext = AtomicReference<Context?>(null)
 
 /**
@@ -58,164 +33,69 @@ public fun initializeStripeContext(context: Context) {
 public actual class Stripe private constructor(
     public actual val configuration: StripeConfiguration
 ) {
+    private val apiClient = StripeApiClient(configuration, createHttpClientEngine())
+
     private val androidStripe: AndroidStripe by lazy {
         val ctx = appContext.get()
         requireNotNull(ctx) { "Stripe context not initialized. Call initializeStripeContext() first." }
         AndroidStripe(ctx, configuration.publishableKey)
     }
 
+    /**
+     * Get the native Android Stripe SDK instance for UI components.
+     * This is used internally by PaymentSheet, GooglePayLauncher, etc.
+     */
     internal fun getAndroidStripe(): AndroidStripe = androidStripe
 
-    // ============================================================================
-    // Token Creation
-    // ============================================================================
 
-    public actual suspend fun createCardToken(params: CardParams, idempotencyKey: IdempotencyKey?): StripeResult<Token> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            // Note: Android Stripe SDK synchronous methods don't support custom request options
-            // Idempotency keys would require using the async API
-            if (idempotencyKey != null) {
-                android.util.Log.w("Stripe", "Idempotency keys are not supported with synchronous Android SDK methods. Consider using async Stripe operations for idempotency support.")
-            }
+    public actual suspend fun createCardToken(
+        params: CardParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<Token> = apiClient.createCardToken(params, idempotencyKey)
 
-            val androidParams = AndroidCardParams(
-                number = params.number,
-                expMonth = params.expMonth,
-                expYear = params.expYear,
-                cvc = params.cvc,
-                name = params.name,
-                address = params.addressLine1?.let {
-                    com.stripe.android.model.Address(
-                        line1 = params.addressLine1,
-                        line2 = params.addressLine2,
-                        city = params.addressCity,
-                        state = params.addressState,
-                        postalCode = params.addressZip,
-                        country = params.addressCountry
-                    )
-                }
-            )
+    public actual suspend fun createBankAccountToken(
+        params: BankAccountTokenParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<Token> = apiClient.createBankAccountToken(params, idempotencyKey)
 
-            val token = androidStripe.createCardTokenSynchronous(androidParams)
-            requireNotNull(token) { "Failed to create card token" }
-            token.toKmpToken()
-        }
-    }
+    public actual suspend fun createPiiToken(
+        params: PiiTokenParams
+    ): StripeResult<Token> = apiClient.createPiiToken(params)
 
-    public actual suspend fun createBankAccountToken(params: BankAccountTokenParams, idempotencyKey: IdempotencyKey?): StripeResult<Token> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            if (idempotencyKey != null) {
-                android.util.Log.w("Stripe", "Idempotency keys are not supported with synchronous Android SDK methods. Consider using async Stripe operations for idempotency support.")
-            }
+    public actual suspend fun createAccountToken(
+        params: AccountParams
+    ): StripeResult<Token> = apiClient.createAccountToken(params)
 
-            val androidParams = AndroidBankAccountTokenParams(
-                country = params.country,
-                currency = params.currency,
-                accountNumber = params.accountNumber,
-                routingNumber = params.routingNumber,
-                accountHolderName = params.accountHolderName,
-                accountHolderType = params.accountHolderType?.let {
-                    when (it) {
-                        BankAccountTokenParams.AccountHolderType.INDIVIDUAL ->
-                            AndroidBankAccountTokenParams.Type.Individual
-                        BankAccountTokenParams.AccountHolderType.COMPANY ->
-                            AndroidBankAccountTokenParams.Type.Company
-                    }
-                }
-            )
 
-            val token = androidStripe.createBankAccountTokenSynchronous(androidParams)
-            requireNotNull(token) { "Failed to create bank account token" }
-            token.toKmpToken()
-        }
-    }
+    public actual suspend fun createSource(
+        params: SourceParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<Source> = apiClient.createSource(params, idempotencyKey)
 
-    public actual suspend fun createPiiToken(params: PiiTokenParams): StripeResult<Token> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            val token = androidStripe.createPiiTokenSynchronous(params.personalIdNumber)
-            requireNotNull(token) { "Failed to create PII token" }
-            token.toKmpToken()
-        }
-    }
+    public actual suspend fun retrieveSource(
+        sourceId: String,
+        clientSecret: String
+    ): StripeResult<Source> = apiClient.retrieveSource(sourceId, clientSecret)
 
-    public actual suspend fun createAccountToken(params: AccountParams): StripeResult<Token> = withContext(Dispatchers.IO) {
-        StripeResult.failure(
-            StripeException("Account token creation requires server-side implementation or additional Android SDK setup")
-        )
-    }
 
-    // ============================================================================
-    // Source Creation
-    // ============================================================================
+    public actual suspend fun createPaymentMethod(
+        params: PaymentMethodCreateParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<PaymentMethod> = apiClient.createPaymentMethod(params, idempotencyKey)
 
-    public actual suspend fun createSource(params: SourceParams, idempotencyKey: IdempotencyKey?): StripeResult<Source> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            if (idempotencyKey != null) {
-                android.util.Log.w("Stripe", "Idempotency keys are not supported with synchronous Android SDK methods. Consider using async Stripe operations for idempotency support.")
-            }
+    public actual suspend fun retrievePaymentMethod(
+        paymentMethodId: String
+    ): StripeResult<PaymentMethod> = apiClient.retrievePaymentMethod(paymentMethodId)
 
-            val androidParams = params.toAndroidSourceParams()
-            val source = androidStripe.createSourceSynchronous(androidParams)
-            requireNotNull(source) { "Failed to create source" }
-            source.toKmpSource()
-        }
-    }
 
-    public actual suspend fun retrieveSource(sourceId: String, clientSecret: String): StripeResult<Source> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            val source = androidStripe.retrieveSourceSynchronous(sourceId, clientSecret)
-            requireNotNull(source) { "Failed to retrieve source" }
-            source.toKmpSource()
-        }
-    }
+    public actual suspend fun retrievePaymentIntent(
+        clientSecret: String
+    ): StripeResult<PaymentIntent> = apiClient.retrievePaymentIntent(clientSecret)
 
-    // ============================================================================
-    // PaymentMethod
-    // ============================================================================
-
-    public actual suspend fun createPaymentMethod(params: PaymentMethodCreateParams, idempotencyKey: IdempotencyKey?): StripeResult<PaymentMethod> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            if (idempotencyKey != null) {
-                android.util.Log.w("Stripe", "Idempotency keys are not supported with synchronous Android SDK methods. Consider using async Stripe operations for idempotency support.")
-            }
-
-            val androidParams = params.toAndroidPaymentMethodCreateParams()
-            val paymentMethod = androidStripe.createPaymentMethodSynchronous(androidParams)
-            requireNotNull(paymentMethod) { "Failed to create payment method" }
-            paymentMethod.toKmpPaymentMethod()
-        }
-    }
-
-    public actual suspend fun retrievePaymentMethod(paymentMethodId: String): StripeResult<PaymentMethod> = withContext(Dispatchers.IO) {
-        StripeResult.failure(
-            StripeException("PaymentMethod retrieval not available in Android SDK synchronous API")
-        )
-    }
-
-    // ============================================================================
-    // PaymentIntent
-    // ============================================================================
-
-    public actual suspend fun retrievePaymentIntent(clientSecret: String): StripeResult<PaymentIntent> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            val paymentIntent = androidStripe.retrievePaymentIntentSynchronous(clientSecret)
-            requireNotNull(paymentIntent) { "Failed to retrieve payment intent" }
-            paymentIntent.toKmpPaymentIntent()
-        }
-    }
-
-    public actual suspend fun confirmPaymentIntent(params: ConfirmPaymentIntentParams, idempotencyKey: IdempotencyKey?): StripeResult<PaymentIntent> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            if (idempotencyKey != null) {
-                android.util.Log.w("Stripe", "Idempotency keys are not supported with synchronous Android SDK methods. Consider using async Stripe operations for idempotency support.")
-            }
-
-            val androidParams = params.toAndroidConfirmPaymentIntentParams()
-            val paymentIntent = androidStripe.confirmPaymentIntentSynchronous(androidParams)
-            requireNotNull(paymentIntent) { "Failed to confirm payment intent" }
-            paymentIntent.toKmpPaymentIntent()
-        }
-    }
+    public actual suspend fun confirmPaymentIntent(
+        params: ConfirmPaymentIntentParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<PaymentIntent> = apiClient.confirmPaymentIntent(params, idempotencyKey)
 
     /**
      * Handle next action for a PaymentIntent.
@@ -227,40 +107,19 @@ public actual class Stripe private constructor(
      *
      * This method returns an error directing you to use the proper Activity-based approach.
      */
-    public actual suspend fun handleNextActionForPayment(clientSecret: String): StripeResult<PaymentIntent> = withContext(Dispatchers.IO) {
-        StripeResult.failure(
-            StripeException(
-                "handleNextActionForPayment requires Activity context for authentication. " +
-                "Use PaymentAuthenticator.getInstance().handleNextActionForPayment(activity, clientSecret) instead. " +
-                "The Activity must be a ComponentActivity with proper lifecycle integration for the Activity Result API."
-            )
-        )
-    }
+    public actual suspend fun handleNextActionForPayment(
+        clientSecret: String
+    ): StripeResult<PaymentIntent> = apiClient.handleNextActionForPayment(clientSecret)
 
-    // ============================================================================
-    // SetupIntent
-    // ============================================================================
 
-    public actual suspend fun retrieveSetupIntent(clientSecret: String): StripeResult<SetupIntent> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            val setupIntent = androidStripe.retrieveSetupIntentSynchronous(clientSecret)
-            requireNotNull(setupIntent) { "Failed to retrieve setup intent" }
-            setupIntent.toKmpSetupIntent()
-        }
-    }
+    public actual suspend fun retrieveSetupIntent(
+        clientSecret: String
+    ): StripeResult<SetupIntent> = apiClient.retrieveSetupIntent(clientSecret)
 
-    public actual suspend fun confirmSetupIntent(params: ConfirmSetupIntentParams, idempotencyKey: IdempotencyKey?): StripeResult<SetupIntent> = withContext(Dispatchers.IO) {
-        StripeResult.runCatching {
-            if (idempotencyKey != null) {
-                android.util.Log.w("Stripe", "Idempotency keys are not supported with synchronous Android SDK methods. Consider using async Stripe operations for idempotency support.")
-            }
-
-            val androidParams = params.toAndroidConfirmSetupIntentParams()
-            val setupIntent = androidStripe.confirmSetupIntentSynchronous(androidParams)
-            requireNotNull(setupIntent) { "Failed to confirm setup intent" }
-            setupIntent.toKmpSetupIntent()
-        }
-    }
+    public actual suspend fun confirmSetupIntent(
+        params: ConfirmSetupIntentParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<SetupIntent> = apiClient.confirmSetupIntent(params, idempotencyKey)
 
     /**
      * Handle next action for a SetupIntent.
@@ -272,34 +131,11 @@ public actual class Stripe private constructor(
      *
      * This method returns an error directing you to use the proper Activity-based approach.
      */
-    public actual suspend fun handleNextActionForSetupIntent(clientSecret: String): StripeResult<SetupIntent> = withContext(Dispatchers.IO) {
-        StripeResult.failure(
-            StripeException(
-                "handleNextActionForSetupIntent requires Activity context for authentication. " +
-                "Use PaymentAuthenticator.getInstance().handleNextActionForSetupIntent(activity, clientSecret) instead. " +
-                "The Activity must be a ComponentActivity with proper lifecycle integration for the Activity Result API."
-            )
-        )
-    }
-
-    // ============================================================================
-    // Customer
-    // ============================================================================
-
-    public actual suspend fun retrieveCustomer(customerId: String): StripeResult<Customer> = withContext(Dispatchers.IO) {
-        StripeResult.failure(
-            StripeException("Customer retrieval requires server-side implementation for security")
-        )
-    }
-
-    public actual suspend fun createEphemeralKey(params: EphemeralKeyCreateParams): StripeResult<EphemeralKey> = withContext(Dispatchers.IO) {
-        StripeResult.failure(
-            StripeException("Ephemeral key creation requires server-side implementation for security")
-        )
-    }
+    public actual suspend fun handleNextActionForSetupIntent(
+        clientSecret: String
+    ): StripeResult<SetupIntent> = apiClient.handleNextActionForSetupIntent(clientSecret)
 
     public actual companion object {
-        // CRITICAL-06: Use AtomicReference for thread-safe singleton
         private val instance = AtomicReference<Stripe?>(null)
 
         public actual fun initialize(configuration: StripeConfiguration): Stripe {

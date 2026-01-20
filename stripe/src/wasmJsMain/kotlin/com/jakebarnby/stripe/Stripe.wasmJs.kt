@@ -3,146 +3,92 @@ package com.jakebarnby.stripe
 import com.jakebarnby.stripe.model.*
 
 /**
- * WASM Stripe implementation.
+ * WASM Stripe implementation using shared REST API client.
  *
- * WARNING: WASM support for Stripe is currently experimental and limited.
- * For production use, please use the JS, Android, or iOS platforms.
+ * Headless operations (tokens, payment methods, intents) use the REST API via Ktor.
+ * UI components (PaymentSheet, Apple Pay, Google Pay) are not supported on WASM.
  *
- * WASM-JS interop for Stripe.js is not yet fully functional. Consider using
- * the regular JS target instead if you need web support.
- *
- * All API methods return unsupported errors on WASM platform.
+ * Note: Browser-hosted WASM is subject to CORS and Stripe client-side restrictions.
  */
 public actual class Stripe private constructor(
     public actual val configuration: StripeConfiguration
 ) {
-    // ============================================================================
-    // Token Creation
-    // ============================================================================
+    private val apiClient = StripeApiClient(configuration, createHttpClientEngine())
 
-    public actual suspend fun createCardToken(params: CardParams, idempotencyKey: IdempotencyKey?): StripeResult<Token> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
 
-    public actual suspend fun createBankAccountToken(params: BankAccountTokenParams, idempotencyKey: IdempotencyKey?): StripeResult<Token> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun createCardToken(
+        params: CardParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<Token> = apiClient.createCardToken(params, idempotencyKey)
 
-    public actual suspend fun createPiiToken(params: PiiTokenParams): StripeResult<Token> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun createBankAccountToken(
+        params: BankAccountTokenParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<Token> = apiClient.createBankAccountToken(params, idempotencyKey)
 
-    public actual suspend fun createAccountToken(params: AccountParams): StripeResult<Token> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun createPiiToken(
+        params: PiiTokenParams
+    ): StripeResult<Token> = apiClient.createPiiToken(params)
 
-    // ============================================================================
-    // Source Creation
-    // ============================================================================
+    public actual suspend fun createAccountToken(
+        params: AccountParams
+    ): StripeResult<Token> = apiClient.createAccountToken(params)
 
-    public actual suspend fun createSource(params: SourceParams, idempotencyKey: IdempotencyKey?): StripeResult<Source> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
 
-    public actual suspend fun retrieveSource(sourceId: String, clientSecret: String): StripeResult<Source> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun createSource(
+        params: SourceParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<Source> = apiClient.createSource(params, idempotencyKey)
 
-    // ============================================================================
-    // PaymentMethod
-    // ============================================================================
+    public actual suspend fun retrieveSource(
+        sourceId: String,
+        clientSecret: String
+    ): StripeResult<Source> = apiClient.retrieveSource(sourceId, clientSecret)
 
-    public actual suspend fun createPaymentMethod(params: PaymentMethodCreateParams, idempotencyKey: IdempotencyKey?): StripeResult<PaymentMethod> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
 
-    public actual suspend fun retrievePaymentMethod(paymentMethodId: String): StripeResult<PaymentMethod> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun createPaymentMethod(
+        params: PaymentMethodCreateParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<PaymentMethod> = apiClient.createPaymentMethod(params, idempotencyKey)
 
-    // ============================================================================
-    // PaymentIntent
-    // ============================================================================
+    public actual suspend fun retrievePaymentMethod(
+        paymentMethodId: String
+    ): StripeResult<PaymentMethod> = apiClient.retrievePaymentMethod(paymentMethodId)
 
-    public actual suspend fun retrievePaymentIntent(clientSecret: String): StripeResult<PaymentIntent> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
 
-    public actual suspend fun confirmPaymentIntent(params: ConfirmPaymentIntentParams, idempotencyKey: IdempotencyKey?): StripeResult<PaymentIntent> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun retrievePaymentIntent(
+        clientSecret: String
+    ): StripeResult<PaymentIntent> = apiClient.retrievePaymentIntent(clientSecret)
 
-    public actual suspend fun handleNextActionForPayment(clientSecret: String): StripeResult<PaymentIntent> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun confirmPaymentIntent(
+        params: ConfirmPaymentIntentParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<PaymentIntent> = apiClient.confirmPaymentIntent(params, idempotencyKey)
 
-    // ============================================================================
-    // SetupIntent
-    // ============================================================================
+    public actual suspend fun handleNextActionForPayment(
+        clientSecret: String
+    ): StripeResult<PaymentIntent> = apiClient.handleNextActionForPayment(clientSecret)
 
-    public actual suspend fun retrieveSetupIntent(clientSecret: String): StripeResult<SetupIntent> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
 
-    public actual suspend fun confirmSetupIntent(params: ConfirmSetupIntentParams, idempotencyKey: IdempotencyKey?): StripeResult<SetupIntent> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun retrieveSetupIntent(
+        clientSecret: String
+    ): StripeResult<SetupIntent> = apiClient.retrieveSetupIntent(clientSecret)
 
-    public actual suspend fun handleNextActionForSetupIntent(clientSecret: String): StripeResult<SetupIntent> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun confirmSetupIntent(
+        params: ConfirmSetupIntentParams,
+        idempotencyKey: IdempotencyKey?
+    ): StripeResult<SetupIntent> = apiClient.confirmSetupIntent(params, idempotencyKey)
 
-    // ============================================================================
-    // Customer
-    // ============================================================================
-
-    public actual suspend fun retrieveCustomer(customerId: String): StripeResult<Customer> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
-
-    public actual suspend fun createEphemeralKey(params: EphemeralKeyCreateParams): StripeResult<EphemeralKey> {
-        return StripeResult.failure(
-            StripeException("WASM platform not supported. Use JS, Android, or iOS instead.")
-        )
-    }
+    public actual suspend fun handleNextActionForSetupIntent(
+        clientSecret: String
+    ): StripeResult<SetupIntent> = apiClient.handleNextActionForSetupIntent(clientSecret)
 
     public actual companion object {
         private var instance: Stripe? = null
 
         public actual fun initialize(configuration: StripeConfiguration): Stripe {
-            // CRITICAL-03: Make it clear WASM is not fully supported
             if (configuration.enableLogging) {
-                println("WARNING: WASM support is experimental. Use JS, Android, or iOS for production.")
+                println("WARNING: WASM support is experimental. Browser environments may require Stripe.js due to CORS.")
             }
 
             val stripe = Stripe(configuration)
@@ -150,12 +96,6 @@ public actual class Stripe private constructor(
             return stripe
         }
 
-        /**
-         * Get the current Stripe instance.
-         *
-         * @return The current Stripe instance
-         * @throws IllegalStateException if Stripe has not been initialized
-         */
         public actual fun getInstance(): Stripe {
             return requireNotNull(instance) {
                 "Stripe has not been initialized. Call Stripe.initialize() first."

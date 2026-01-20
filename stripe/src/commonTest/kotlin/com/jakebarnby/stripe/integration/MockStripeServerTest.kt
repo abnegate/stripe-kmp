@@ -22,9 +22,6 @@ import kotlin.test.assertFailsWith
  */
 public class MockStripeServerTest {
 
-    // ============================================================================
-    // CardParams Validation Tests
-    // ============================================================================
 
     @Test
     fun testCardParams_validation_withValidCard() {
@@ -140,9 +137,6 @@ public class MockStripeServerTest {
         }
     }
 
-    // ============================================================================
-    // BankAccountTokenParams Validation Tests
-    // ============================================================================
 
     @Test
     fun testBankAccountParams_validation_withValidData() {
@@ -198,9 +192,6 @@ public class MockStripeServerTest {
         )
     }
 
-    // ============================================================================
-    // StripeResult Tests
-    // ============================================================================
 
     @Test
     fun testStripeResult_success_creation() {
@@ -276,9 +267,6 @@ public class MockStripeServerTest {
         assertTrue(executed)
     }
 
-    // ============================================================================
-    // IdempotencyKey Tests
-    // ============================================================================
 
     @Test
     fun testIdempotencyKey_generate_createsUniqueKeys() {
@@ -309,9 +297,6 @@ public class MockStripeServerTest {
         }
     }
 
-    // ============================================================================
-    // PaymentIntentStatus Tests
-    // ============================================================================
 
     @Test
     fun testPaymentIntentStatus_fromValue_convertsCorrectly() {
@@ -337,9 +322,6 @@ public class MockStripeServerTest {
         )
     }
 
-    // ============================================================================
-    // PaymentMethodType Tests
-    // ============================================================================
 
     @Test
     fun testPaymentMethodType_fromValue_convertsCorrectly() {
@@ -361,9 +343,6 @@ public class MockStripeServerTest {
         )
     }
 
-    // ============================================================================
-    // CardBrand Tests
-    // ============================================================================
 
     @Test
     fun testCardBrand_fromValue_convertsCorrectly() {
@@ -377,9 +356,6 @@ public class MockStripeServerTest {
         assertEquals(CardBrand.UNKNOWN, CardBrand.fromValue("invalid"))
     }
 
-    // ============================================================================
-    // BillingDetails Validation Tests
-    // ============================================================================
 
     @Test
     fun testBillingDetails_validation_withValidEmail() {
@@ -422,9 +398,6 @@ public class MockStripeServerTest {
         assertEquals("US", billingDetails.address?.country)
     }
 
-    // ============================================================================
-    // Address Validation Tests
-    // ============================================================================
 
     @Test
     fun testAddress_validation_withValidCountry() {

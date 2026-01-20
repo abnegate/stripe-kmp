@@ -31,9 +31,6 @@ public expect class Stripe {
      */
     public val configuration: StripeConfiguration
 
-    // ============================================================================
-    // Token Creation
-    // ============================================================================
 
     /**
      * Create a card token.
@@ -71,9 +68,6 @@ public expect class Stripe {
      */
     public suspend fun createAccountToken(params: AccountParams): StripeResult<Token>
 
-    // ============================================================================
-    // Source Creation (Legacy - prefer PaymentMethod)
-    // ============================================================================
 
     /**
      * Create a source.
@@ -94,9 +88,6 @@ public expect class Stripe {
      */
     public suspend fun retrieveSource(sourceId: String, clientSecret: String): StripeResult<Source>
 
-    // ============================================================================
-    // PaymentMethod
-    // ============================================================================
 
     /**
      * Create a payment method.
@@ -116,9 +107,6 @@ public expect class Stripe {
      */
     public suspend fun retrievePaymentMethod(paymentMethodId: String): StripeResult<PaymentMethod>
 
-    // ============================================================================
-    // PaymentIntent
-    // ============================================================================
 
     /**
      * Retrieve a PaymentIntent by client secret.
@@ -147,9 +135,6 @@ public expect class Stripe {
      */
     public suspend fun handleNextActionForPayment(clientSecret: String): StripeResult<PaymentIntent>
 
-    // ============================================================================
-    // SetupIntent
-    // ============================================================================
 
     /**
      * Retrieve a SetupIntent by client secret.
@@ -177,27 +162,4 @@ public expect class Stripe {
      * @return Result containing the updated SetupIntent or an error
      */
     public suspend fun handleNextActionForSetupIntent(clientSecret: String): StripeResult<SetupIntent>
-
-    // ============================================================================
-    // Customer
-    // ============================================================================
-
-    /**
-     * Retrieve a customer by ID.
-     *
-     * @param customerId The ID of the customer
-     * @return Result containing the customer or an error
-     */
-    public suspend fun retrieveCustomer(customerId: String): StripeResult<Customer>
-
-    /**
-     * Create an ephemeral key.
-     * Ephemeral keys are short-lived API keys used for client-side operations.
-     *
-     * Note: This typically requires a server-side endpoint to create the key securely.
-     *
-     * @param params Parameters for creating the ephemeral key
-     * @return Result containing the ephemeral key or an error
-     */
-    public suspend fun createEphemeralKey(params: EphemeralKeyCreateParams): StripeResult<EphemeralKey>
 }
