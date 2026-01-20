@@ -134,13 +134,21 @@ jobs:
     - name: Select Xcode version
       run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
+    - name: List available simulators
+      id: list-sims
+      run: |
+        # Get first available iOS simulator
+        DEVICE_NAME=$(xcrun simctl list devices available --json | jq -r '.devices | to_entries[] | select(.key | contains("iOS")) | .value[] | select(.isAvailable == true) | .name' | head -1)
+        echo "Using simulator: $DEVICE_NAME"
+        echo "device_name=$DEVICE_NAME" >> $GITHUB_OUTPUT
+
     - name: Build iOS App for Testing
       run: |
         cd iosApp
         xcodebuild build-for-testing \
           -project iosApp.xcodeproj \
           -scheme iosApp \
-          -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+          -destination 'platform=iOS Simulator,name=${{ steps.list-sims.outputs.device_name }}' \
           -allowProvisioningUpdates \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
@@ -152,7 +160,7 @@ jobs:
         xcodebuild test-without-building \
           -project iosApp.xcodeproj \
           -scheme iosApp \
-          -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+          -destination 'platform=iOS Simulator,name=${{ steps.list-sims.outputs.device_name }}' \
           -only-testing:iosAppUITests \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO

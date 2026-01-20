@@ -2,13 +2,10 @@ package com.jakebarnby.stripe.http
 
 import com.jakebarnby.stripe.model.StripeException
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -22,13 +19,11 @@ import kotlinx.serialization.json.jsonPrimitive
 internal class StripeHttpClient(
     private val publishableKey: String
 ) {
-    private val httpClient = HttpClient(OkHttp) {
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            })
-        }
+    private val httpClient = HttpClient(OkHttp)
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
     }
 
     private val baseUrl = "https://api.stripe.com/v1"
@@ -41,7 +36,7 @@ internal class StripeHttpClient(
         params: Map<String, Any>,
         idempotencyKey: String? = null
     ): JsonObject {
-        try {
+        return try {
             val response: HttpResponse = httpClient.post("$baseUrl/$endpoint") {
                 header("Authorization", "Bearer $publishableKey")
                 idempotencyKey?.let { header("Idempotency-Key", it) }
@@ -52,12 +47,20 @@ internal class StripeHttpClient(
                 setBody(formParams.formUrlEncode())
             }
 
+            val bodyText = response.bodyAsText()
+
             if (response.status.isSuccess()) {
-                return response.body<JsonObject>()
+                try {
+                    json.parseToJsonElement(bodyText) as JsonObject
+                } catch (e: Exception) {
+                    throw StripeException(
+                        "Failed to parse Stripe API response: ${e.message}. Body: ${bodyText.take(500)}",
+                        cause = e
+                    )
+                }
             } else {
-                val errorBody = response.bodyAsText()
                 val error = try {
-                    Json.parseToJsonElement(errorBody) as? JsonObject
+                    json.parseToJsonElement(bodyText) as? JsonObject
                 } catch (e: Exception) {
                     null
                 }
@@ -65,14 +68,14 @@ internal class StripeHttpClient(
                 val errorMessage = error
                     ?.get("error")?.let { it as? JsonObject }
                     ?.get("message")?.jsonPrimitive?.content
-                    ?: "HTTP ${response.status.value}: ${response.status.description}"
+                    ?: "HTTP ${response.status.value}: ${response.status.description}. Response: ${bodyText.take(500)}"
 
                 throw StripeException(errorMessage)
             }
         } catch (e: StripeException) {
             throw e
         } catch (e: Exception) {
-            throw StripeException("Network error: ${e.message}", cause = e)
+            throw StripeException("Network error during API call to $endpoint: ${e.message}", cause = e)
         }
     }
 
