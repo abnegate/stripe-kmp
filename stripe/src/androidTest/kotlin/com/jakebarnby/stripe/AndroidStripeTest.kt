@@ -11,8 +11,7 @@ import kotlin.test.assertFailsWith
  * Android-specific Stripe SDK tests.
  *
  * These tests verify the Android implementation of the Stripe SDK,
- * which uses the shared StripeApiClient for headless operations
- * and the native Stripe Android SDK for UI components.
+ * which uses the native Stripe Android SDK for all operations.
  */
 class AndroidStripeTest {
 
@@ -102,14 +101,6 @@ class AndroidStripeTest {
         assertEquals(PaymentMethodType.CARD, params.type)
         assertNotNull(params.card)
         assertNotNull(params.billingDetails)
-    }
-
-
-    @Test
-    fun testHttpClientEngine_creation() {
-        // The Android HttpClientEngine uses OkHttp engine
-        val engine = createHttpClientEngine()
-        assertNotNull(engine)
     }
 
 

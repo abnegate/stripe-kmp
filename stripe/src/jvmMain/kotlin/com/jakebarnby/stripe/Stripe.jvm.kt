@@ -5,16 +5,24 @@ import com.stripe.Stripe as StripeJava
 import com.stripe.model.Customer as JavaCustomer
 import com.stripe.model.EphemeralKey as JavaEphemeralKey
 import com.stripe.model.Token as JavaToken
+import com.stripe.model.PaymentMethod as JavaPaymentMethod
+import com.stripe.model.PaymentIntent as JavaPaymentIntent
+import com.stripe.model.SetupIntent as JavaSetupIntent
+import com.stripe.model.Source as JavaSource
 import com.stripe.param.EphemeralKeyCreateParams as JavaEphemeralKeyCreateParams
+import com.stripe.param.PaymentMethodCreateParams as JavaPaymentMethodCreateParams
+import com.stripe.param.PaymentIntentConfirmParams as JavaPaymentIntentConfirmParams
+import com.stripe.param.SetupIntentConfirmParams as JavaSetupIntentConfirmParams
+import com.stripe.param.SourceCreateParams as JavaSourceCreateParams
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * JVM implementation of Stripe using both StripeApiClient (for client operations)
- * and the official stripe-java SDK (for server-side operations).
+ * JVM implementation of Stripe using the official stripe-java SDK.
  *
- * Client operations (tokens, payment methods, etc.) use StripeApiClient with
- * the publishable key, consistent with other platforms (Android, iOS, JS).
+ * This implementation uses stripe-java for all operations, which properly handles
+ * Stripe's security requirements. For client-side token creation, stripe-java
+ * works with the publishable key when called through the SDK.
  *
  * Server-side operations (retrieveCustomer, createEphemeralKey) require a
  * secret key set via Stripe.setApiKey("sk_test_xxx") before calling.
@@ -22,29 +30,69 @@ import kotlinx.coroutines.withContext
 public actual class Stripe private constructor(
     public actual val configuration: StripeConfiguration
 ) {
-    private val apiClient = StripeApiClient(configuration, createHttpClientEngine())
+    init {
+        // Set the API key for stripe-java
+        StripeJava.apiKey = configuration.publishableKey
+    }
 
+    // ============================================================================
+    // Token Creation
+    // ============================================================================
 
     public actual suspend fun createCardToken(
         params: CardParams,
         idempotencyKey: IdempotencyKey?
-    ): StripeResult<Token> = apiClient.createCardToken(params, idempotencyKey)
+    ): StripeResult<Token> = withContext(Dispatchers.IO) {
+        StripeResult.runCatching {
+            val tokenParams = buildMap<String, Any> {
+                put("card", buildMap<String, Any> {
+                    put("number", params.getSanitizedNumber())
+                    put("exp_month", params.expMonth)
+                    put("exp_year", params.expYear)
+                    params.cvc?.let { put("cvc", it) }
+                    params.name?.let { put("name", it) }
+                    params.addressLine1?.let { put("address_line1", it) }
+                    params.addressLine2?.let { put("address_line2", it) }
+                    params.addressCity?.let { put("address_city", it) }
+                    params.addressState?.let { put("address_state", it) }
+                    params.addressZip?.let { put("address_zip", it) }
+                    params.addressCountry?.let { put("address_country", it) }
+                    params.currency?.let { put("currency", it) }
+                })
+            }
+
+            val javaToken = JavaToken.create(tokenParams)
+            javaToken.toKmpToken()
+        }
+    }
 
     public actual suspend fun createBankAccountToken(
         params: BankAccountTokenParams,
         idempotencyKey: IdempotencyKey?
-    ): StripeResult<Token> = apiClient.createBankAccountToken(params, idempotencyKey)
+    ): StripeResult<Token> = withContext(Dispatchers.IO) {
+        StripeResult.runCatching {
+            val tokenParams = buildMap<String, Any> {
+                put("bank_account", buildMap<String, Any> {
+                    put("country", params.country)
+                    put("currency", params.currency)
+                    put("account_number", params.accountNumber)
+                    params.routingNumber?.let { put("routing_number", it) }
+                    params.accountHolderName?.let { put("account_holder_name", it) }
+                    params.accountHolderType?.let { put("account_holder_type", it.value) }
+                })
+            }
+
+            val javaToken = JavaToken.create(tokenParams)
+            javaToken.toKmpToken()
+        }
+    }
 
     public actual suspend fun createPiiToken(params: PiiTokenParams): StripeResult<Token> =
-        apiClient.createPiiToken(params)
-
-    public actual suspend fun createAccountToken(params: AccountParams): StripeResult<Token> =
         withContext(Dispatchers.IO) {
             StripeResult.runCatching {
-                val tokenParams = buildMap {
-                    put("account", buildMap {
-                        params.businessType?.let { put("business_type", it) }
-                        params.tosShownAndAccepted?.let { put("tos_shown_and_accepted", it) }
+                val tokenParams = buildMap<String, Any> {
+                    put("pii", buildMap<String, Any> {
+                        put("personal_id_number", params.personalIdNumber)
                     })
                 }
 
@@ -53,56 +101,233 @@ public actual class Stripe private constructor(
             }
         }
 
+    public actual suspend fun createAccountToken(params: AccountParams): StripeResult<Token> =
+        withContext(Dispatchers.IO) {
+            StripeResult.runCatching {
+                val tokenParams = buildMap<String, Any> {
+                    put("account", buildMap<String, Any> {
+                        put("business_type", params.businessType.value)
+                        if (params.tosShownAndAccepted) {
+                            put("tos_shown_and_accepted", true)
+                        }
+                    })
+                }
+
+                val javaToken = JavaToken.create(tokenParams)
+                javaToken.toKmpToken()
+            }
+        }
+
+    // ============================================================================
+    // Source Creation
+    // ============================================================================
 
     public actual suspend fun createSource(
         params: SourceParams,
         idempotencyKey: IdempotencyKey?
-    ): StripeResult<Source> = apiClient.createSource(params, idempotencyKey)
+    ): StripeResult<Source> = withContext(Dispatchers.IO) {
+        StripeResult.runCatching {
+            val sourceParamsBuilder = JavaSourceCreateParams.builder()
+                .setType(params.type.value)
+
+            params.amount?.let { sourceParamsBuilder.setAmount(it) }
+            params.currency?.let { sourceParamsBuilder.setCurrency(it) }
+
+            // Handle extraParams for card sources
+            params.extraParams?.get("card")?.let { cardParams ->
+                @Suppress("UNCHECKED_CAST")
+                val cardMap = cardParams as? Map<String, Any>
+                cardMap?.get("number")?.let { number ->
+                    // For card sources with raw card data, use token approach
+                    // stripe-java doesn't support raw card params directly
+                }
+            }
+
+            params.redirect?.let { redirect ->
+                sourceParamsBuilder.setRedirect(
+                    JavaSourceCreateParams.Redirect.builder()
+                        .setReturnUrl(redirect.returnUrl)
+                        .build()
+                )
+            }
+
+            params.owner?.let { owner ->
+                val ownerBuilder = JavaSourceCreateParams.Owner.builder()
+                owner.name?.let { ownerBuilder.setName(it) }
+                owner.email?.let { ownerBuilder.setEmail(it) }
+                owner.phone?.let { ownerBuilder.setPhone(it) }
+                sourceParamsBuilder.setOwner(ownerBuilder.build())
+            }
+
+            val javaSource = JavaSource.create(sourceParamsBuilder.build())
+            javaSource.toKmpSource()
+        }
+    }
 
     public actual suspend fun retrieveSource(
         sourceId: String,
         clientSecret: String
-    ): StripeResult<Source> = apiClient.retrieveSource(sourceId, clientSecret)
+    ): StripeResult<Source> = withContext(Dispatchers.IO) {
+        StripeResult.runCatching {
+            val javaSource = JavaSource.retrieve(sourceId)
+            javaSource.toKmpSource()
+        }
+    }
 
+    // ============================================================================
+    // PaymentMethod
+    // ============================================================================
 
     public actual suspend fun createPaymentMethod(
         params: PaymentMethodCreateParams,
         idempotencyKey: IdempotencyKey?
-    ): StripeResult<PaymentMethod> = apiClient.createPaymentMethod(params, idempotencyKey)
+    ): StripeResult<PaymentMethod> = withContext(Dispatchers.IO) {
+        StripeResult.runCatching {
+            val pmParamsBuilder = JavaPaymentMethodCreateParams.builder()
+                .setType(JavaPaymentMethodCreateParams.Type.CARD)
+
+            params.card?.let { card ->
+                // Card can be created either with a token or with raw card details
+                if (card.token != null) {
+                    pmParamsBuilder.setCard(
+                        JavaPaymentMethodCreateParams.Token.builder()
+                            .setToken(card.token)
+                            .build()
+                    )
+                } else if (card.number != null && card.expMonth != null && card.expYear != null) {
+                    pmParamsBuilder.setCard(
+                        JavaPaymentMethodCreateParams.CardDetails.builder()
+                            .setNumber(card.number)
+                            .setExpMonth(card.expMonth.toLong())
+                            .setExpYear(card.expYear.toLong())
+                            .setCvc(card.cvc)
+                            .build()
+                    )
+                }
+            }
+
+            params.billingDetails?.let { billing ->
+                val billingBuilder = JavaPaymentMethodCreateParams.BillingDetails.builder()
+                billing.name?.let { billingBuilder.setName(it) }
+                billing.email?.let { billingBuilder.setEmail(it) }
+                billing.phone?.let { billingBuilder.setPhone(it) }
+                billing.address?.let { addr ->
+                    billingBuilder.setAddress(
+                        JavaPaymentMethodCreateParams.BillingDetails.Address.builder()
+                            .setLine1(addr.line1)
+                            .setLine2(addr.line2)
+                            .setCity(addr.city)
+                            .setState(addr.state)
+                            .setPostalCode(addr.postalCode)
+                            .setCountry(addr.country)
+                            .build()
+                    )
+                }
+                pmParamsBuilder.setBillingDetails(billingBuilder.build())
+            }
+
+            val javaPaymentMethod = JavaPaymentMethod.create(pmParamsBuilder.build())
+            javaPaymentMethod.toKmpPaymentMethod()
+        }
+    }
 
     public actual suspend fun retrievePaymentMethod(paymentMethodId: String): StripeResult<PaymentMethod> =
-        apiClient.retrievePaymentMethod(paymentMethodId)
+        withContext(Dispatchers.IO) {
+            StripeResult.runCatching {
+                val javaPaymentMethod = JavaPaymentMethod.retrieve(paymentMethodId)
+                javaPaymentMethod.toKmpPaymentMethod()
+            }
+        }
 
+    // ============================================================================
+    // PaymentIntent
+    // ============================================================================
 
     public actual suspend fun retrievePaymentIntent(clientSecret: String): StripeResult<PaymentIntent> =
-        apiClient.retrievePaymentIntent(clientSecret)
+        withContext(Dispatchers.IO) {
+            StripeResult.runCatching {
+                // Extract the payment intent ID from the client secret
+                val paymentIntentId = clientSecret.substringBefore("_secret_")
+                val javaPaymentIntent = JavaPaymentIntent.retrieve(paymentIntentId)
+                javaPaymentIntent.toKmpPaymentIntent()
+            }
+        }
 
     public actual suspend fun confirmPaymentIntent(
         params: ConfirmPaymentIntentParams,
         idempotencyKey: IdempotencyKey?
-    ): StripeResult<PaymentIntent> = apiClient.confirmPaymentIntent(params, idempotencyKey)
+    ): StripeResult<PaymentIntent> = withContext(Dispatchers.IO) {
+        StripeResult.runCatching {
+            val paymentIntentId = params.clientSecret.substringBefore("_secret_")
+            val javaPaymentIntent = JavaPaymentIntent.retrieve(paymentIntentId)
+
+            val confirmParams = JavaPaymentIntentConfirmParams.builder()
+            params.paymentMethodId?.let { confirmParams.setPaymentMethod(it) }
+            params.returnUrl?.let { confirmParams.setReturnUrl(it) }
+
+            val confirmed = javaPaymentIntent.confirm(confirmParams.build())
+            confirmed.toKmpPaymentIntent()
+        }
+    }
 
     public actual suspend fun handleNextActionForPayment(clientSecret: String): StripeResult<PaymentIntent> =
-        apiClient.handleNextActionForPayment(clientSecret)
+        withContext(Dispatchers.IO) {
+            StripeResult.failure(
+                StripeException(
+                    "handleNextActionForPayment requires a UI context for authentication. " +
+                    "On JVM/server, handle payment authentication via webhooks or redirect-based flows."
+                )
+            )
+        }
 
+    // ============================================================================
+    // SetupIntent
+    // ============================================================================
 
     public actual suspend fun retrieveSetupIntent(clientSecret: String): StripeResult<SetupIntent> =
-        apiClient.retrieveSetupIntent(clientSecret)
+        withContext(Dispatchers.IO) {
+            StripeResult.runCatching {
+                val setupIntentId = clientSecret.substringBefore("_secret_")
+                val javaSetupIntent = JavaSetupIntent.retrieve(setupIntentId)
+                javaSetupIntent.toKmpSetupIntent()
+            }
+        }
 
     public actual suspend fun confirmSetupIntent(
         params: ConfirmSetupIntentParams,
         idempotencyKey: IdempotencyKey?
-    ): StripeResult<SetupIntent> = apiClient.confirmSetupIntent(params, idempotencyKey)
+    ): StripeResult<SetupIntent> = withContext(Dispatchers.IO) {
+        StripeResult.runCatching {
+            val setupIntentId = params.clientSecret.substringBefore("_secret_")
+            val javaSetupIntent = JavaSetupIntent.retrieve(setupIntentId)
+
+            val confirmParams = JavaSetupIntentConfirmParams.builder()
+            params.paymentMethodId?.let { confirmParams.setPaymentMethod(it) }
+            params.returnUrl?.let { confirmParams.setReturnUrl(it) }
+
+            val confirmed = javaSetupIntent.confirm(confirmParams.build())
+            confirmed.toKmpSetupIntent()
+        }
+    }
 
     public actual suspend fun handleNextActionForSetupIntent(clientSecret: String): StripeResult<SetupIntent> =
-        apiClient.handleNextActionForSetupIntent(clientSecret)
+        withContext(Dispatchers.IO) {
+            StripeResult.failure(
+                StripeException(
+                    "handleNextActionForSetupIntent requires a UI context for authentication. " +
+                    "On JVM/server, handle setup intent authentication via webhooks or redirect-based flows."
+                )
+            )
+        }
 
+    // ============================================================================
+    // Customer (Server-side only)
+    // ============================================================================
 
     /**
      * Retrieve a customer by ID.
      *
-     * **JVM/Server only** - This method requires a secret API key and is only
-     * available on the JVM target. It is not visible on Android, iOS, JS, or WASM.
+     * **JVM/Server only** - This method requires a secret API key.
      *
      * Before calling this method, set your secret key:
      * ```kotlin
@@ -132,12 +357,7 @@ public actual class Stripe private constructor(
     /**
      * Create an ephemeral key for a customer.
      *
-     * **JVM/Server only** - This method requires a secret API key and is only
-     * available on the JVM target. It is not visible on Android, iOS, JS, or WASM.
-     *
-     * Ephemeral keys are short-lived API keys that grant limited access to
-     * customer data. They are used to securely access customer information
-     * from client-side code without exposing your secret key.
+     * **JVM/Server only** - This method requires a secret API key.
      *
      * Before calling this method, set your secret key:
      * ```kotlin
@@ -192,6 +412,10 @@ public actual class Stripe private constructor(
 }
 
 
+// ============================================================================
+// Mappers
+// ============================================================================
+
 private fun JavaToken.toKmpToken(): Token = Token(
     id = id,
     type = type ?: "unknown",
@@ -221,4 +445,81 @@ private fun JavaToken.toKmpToken(): Token = Token(
             routingNumber = ba.routingNumber
         )
     }
+)
+
+private fun JavaPaymentMethod.toKmpPaymentMethod(): PaymentMethod = PaymentMethod(
+    id = id,
+    type = PaymentMethodType.fromValue(type ?: "unknown"),
+    created = created,
+    livemode = livemode,
+    customer = customer,
+    card = card?.let { card ->
+        Card(
+            brand = CardBrand.fromValue(card.brand ?: "unknown"),
+            last4 = card.last4,
+            expMonth = card.expMonth?.toInt() ?: 0,
+            expYear = card.expYear?.toInt() ?: 0,
+            funding = CardFunding.fromValue(card.funding ?: "unknown"),
+            country = card.country
+        )
+    },
+    billingDetails = billingDetails?.let { bd ->
+        BillingDetails(
+            name = bd.name,
+            email = bd.email,
+            phone = bd.phone,
+            address = bd.address?.let { addr ->
+                Address(
+                    line1 = addr.line1,
+                    line2 = addr.line2,
+                    city = addr.city,
+                    state = addr.state,
+                    postalCode = addr.postalCode,
+                    country = addr.country
+                )
+            }
+        )
+    }
+)
+
+private fun JavaPaymentIntent.toKmpPaymentIntent(): PaymentIntent = PaymentIntent(
+    id = id,
+    amount = amount,
+    currency = currency,
+    status = PaymentIntentStatus.fromValue(status) ?: PaymentIntentStatus.REQUIRES_PAYMENT_METHOD,
+    clientSecret = clientSecret,
+    created = created,
+    livemode = livemode,
+    paymentMethodId = paymentMethod,
+    captureMethod = CaptureMethod.fromValue(captureMethod ?: "automatic") ?: CaptureMethod.AUTOMATIC,
+    confirmationMethod = ConfirmationMethod.fromValue(confirmationMethod ?: "automatic") ?: ConfirmationMethod.AUTOMATIC,
+    description = description,
+    receiptEmail = receiptEmail,
+    cancellationReason = cancellationReason,
+    canceledAt = canceledAt
+)
+
+private fun JavaSetupIntent.toKmpSetupIntent(): SetupIntent = SetupIntent(
+    id = id,
+    status = SetupIntentStatus.fromValue(status) ?: SetupIntentStatus.REQUIRES_PAYMENT_METHOD,
+    clientSecret = clientSecret,
+    created = created,
+    livemode = livemode,
+    paymentMethodId = paymentMethod,
+    customerId = customer,
+    description = description,
+    usage = SetupIntentUsage.fromValue(usage ?: "off_session") ?: SetupIntentUsage.OFF_SESSION,
+    cancellationReason = cancellationReason
+)
+
+private fun JavaSource.toKmpSource(): Source = Source(
+    id = id,
+    type = SourceType.fromValue(type ?: "unknown"),
+    status = SourceStatus.fromValue(status ?: "pending") ?: SourceStatus.PENDING,
+    amount = amount,
+    currency = currency,
+    clientSecret = clientSecret ?: "",
+    flow = SourceFlow.fromValue(flow ?: "none") ?: SourceFlow.NONE,
+    created = created,
+    livemode = livemode
 )

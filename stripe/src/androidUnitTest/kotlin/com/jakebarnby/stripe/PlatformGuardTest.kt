@@ -46,13 +46,4 @@ class PlatformGuardTest {
         }
     }
 
-    @Test
-    fun createHttpClientEngine_returnsEngine() {
-        val engine = createHttpClientEngine()
-        try {
-            assertTrue(engine.toString().isNotBlank())
-        } finally {
-            engine.close()
-        }
-    }
 }

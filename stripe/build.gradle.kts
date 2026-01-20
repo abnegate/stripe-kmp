@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -68,7 +67,6 @@ kotlin {
         }
 
         // Stripe iOS SDK for PaymentSheet UI
-        // Headless operations use REST API via Ktor
         pod("StripePaymentSheet") {
             version = "25.5.0"
             extraOpts += listOf("-compiler-option", "-fmodules")
@@ -77,11 +75,6 @@ kotlin {
 
     // MEDIUM-08: Remove binaries.executable() for library module
     js {
-        browser()
-    }
-
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
         browser()
     }
 
@@ -100,9 +93,6 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
-            implementation(libs.ktor.client.mock)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.json)
             implementation(libs.kotlinx.serialization.json)
         }
 
@@ -126,10 +116,6 @@ kotlin {
         val clientMain by creating {
             dependsOn(commonMain.get())
             dependencies {
-                // Common Ktor dependencies for REST API
-                implementation(libs.ktor.client.core)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.json)
                 implementation(libs.kotlinx.serialization.json)
             }
         }
@@ -146,9 +132,7 @@ kotlin {
             dependsOn(clientMain)
             dependsOn(googlePayMain)
             dependencies {
-                // Ktor engine for Android
-                implementation(libs.ktor.client.okhttp)
-                // Native SDK for UI components only
+                // Native Stripe Android SDK
                 api(libs.stripe.android)
                 api(libs.stripe.financial.connections)
                 api(libs.stripe.identity)
@@ -159,10 +143,6 @@ kotlin {
         val iosMain by getting {
             dependsOn(clientMain)
             dependsOn(applePayMain)
-            dependencies {
-                // Ktor engine for iOS
-                implementation(libs.ktor.client.darwin)
-            }
         }
 
         jsMain {
@@ -170,27 +150,16 @@ kotlin {
             dependsOn(applePayMain)
             dependsOn(googlePayMain)
             dependencies {
-                // Ktor engine for JS
-                implementation(libs.ktor.client.js)
                 // Stripe.js for UI components
                 implementation(npm("@stripe/stripe-js", "5.5.0"))
-            }
-        }
-
-        wasmJsMain {
-            dependsOn(clientMain)
-            dependsOn(applePayMain)
-            dependsOn(googlePayMain)
-            dependencies {
-                implementation(libs.ktor.client.cio)
             }
         }
 
         jvmMain {
             dependsOn(clientMain)
             dependencies {
+                // Official Stripe Java SDK
                 api(libs.stripe.java)
-                implementation(libs.ktor.client.cio)
             }
         }
     }

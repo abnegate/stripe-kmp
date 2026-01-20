@@ -11,7 +11,7 @@ import kotlin.test.assertFailsWith
  * iOS-specific Stripe SDK tests.
  *
  * These tests verify the iOS implementation of the Stripe SDK,
- * which uses the shared StripeApiClient for headless operations
+ * which uses stub implementations for most operations (Swift bridge required)
  * and the native StripePaymentSheet SDK for UI components.
  */
 class IosStripeTest {
@@ -78,14 +78,6 @@ class IosStripeTest {
         assertEquals(PaymentMethodType.CARD, params.type)
         assertNotNull(params.card)
         assertNotNull(params.billingDetails)
-    }
-
-
-    @Test
-    fun testHttpClientEngine_creation() {
-        // The iOS HttpClientEngine uses Darwin engine
-        val engine = createHttpClientEngine()
-        assertNotNull(engine)
     }
 
 

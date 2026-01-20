@@ -14,13 +14,6 @@ import kotlinx.coroutines.test.runTest
  */
 class JvmPlatformTest {
 
-    // HttpClientEngine tests
-    @Test
-    fun testHttpClientEngine_createsEngine() {
-        val engine = createHttpClientEngine()
-        assertNotNull(engine)
-    }
-
     // SecureRandom is internal, so we test it indirectly via IdempotencyKey
     @Test
     fun testSecureRandom_viaIdempotencyKey_generatesUniqueKeys() {
