@@ -93,10 +93,12 @@ jobs:
     - name: Run connected Android tests
       uses: reactivecircus/android-emulator-runner@b530d96654c385303d652368551fb075bc2f0b6b # v2
       with:
-        api-level: 30
-        target: google_apis
+        api-level: 29
+        target: default
         arch: x86_64
-        force-avd-creation: false
+        profile: Nexus 6
+        force-avd-creation: true
+        emulator-boot-timeout: 300
         emulator-options: -no-window -no-audio -no-boot-anim -camera-back none -camera-front none -gpu swiftshader_indirect
         disable-animations: true
         script: ./gradlew :stripe:connectedDebugAndroidTest --no-daemon

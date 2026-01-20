@@ -21,6 +21,25 @@
 		A1B2C3D4E5F6789012345678 /* iosAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iosAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		STRIPE1234567890ABCDEF12 /* XCRemoteSwiftPackageReference "stripe-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stripe/stripe-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 23.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		STRIPE234567890ABCDEF123 /* StripePaymentSheet */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = STRIPE1234567890ABCDEF12 /* XCRemoteSwiftPackageReference "stripe-ios" */;
+			productName = StripePaymentSheet;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		E2314CB5B15F069B40EC82FC /* Exceptions for "iosApp" folder in "iosApp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -120,6 +139,7 @@
 			);
 			name = iosApp;
 			packageProductDependencies = (
+				STRIPE234567890ABCDEF123 /* StripePaymentSheet */,
 			);
 			productName = iosApp;
 			productReference = 3FC9AB042A40DD62A8FC768D /* sdk.app */;
@@ -176,6 +196,9 @@
 			);
 			mainGroup = BA3E78A25E86B79912575A93;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				STRIPE1234567890ABCDEF12 /* XCRemoteSwiftPackageReference "stripe-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8519554A29873A9686B5FEC6 /* Products */;
 			projectDirPath = "";
