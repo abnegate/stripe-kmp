@@ -22,18 +22,30 @@ import kotlinx.coroutines.withContext
  * JVM implementation of Stripe using the official stripe-java SDK.
  *
  * This implementation uses stripe-java for all operations, which properly handles
- * Stripe's security requirements. For client-side token creation, stripe-java
- * works with the publishable key when called through the SDK.
+ * Stripe's security requirements.
  *
- * Server-side operations (retrieveCustomer, createEphemeralKey) require a
- * secret key set via Stripe.setApiKey("sk_test_xxx") before calling.
+ * **API Key Handling:**
+ * - The publishable key from configuration is set globally via `Stripe.apiKey`
+ * - This allows client-side operations (tokens, payment methods, sources) to work
+ * - Only one Stripe instance should be active per application
+ * - If you need to change keys, call `Stripe.initialize()` again with new configuration
+ *
+ * **Server-side operations:**
+ * - `retrieveCustomer` and `createEphemeralKey` require a secret key
+ * - Call `Stripe.setApiKey("sk_test_xxx")` before using these methods
+ * - Note: Setting a secret key will override the publishable key for all operations
  */
 public actual class Stripe private constructor(
     public actual val configuration: StripeConfiguration
 ) {
-    private val requestOptions = RequestOptions.builder()
-        .setApiKey(configuration.publishableKey)
-        .build()
+    init {
+        // For client-side operations (tokens, payment methods, sources) with publishable keys,
+        // stripe-java requires the key to be set globally rather than via RequestOptions
+        StripeJava.apiKey = configuration.publishableKey
+    }
+
+    // RequestOptions without API key - will use the global Stripe.apiKey
+    private val requestOptions = RequestOptions.builder().build()
 
     // ============================================================================
     // Token Creation
@@ -402,8 +414,18 @@ public actual class Stripe private constructor(
         }
 
         /**
-         * Set the API key for stripe-java directly.
-         * Use this for server-side operations with your secret key.
+         * Set the API key for stripe-java globally.
+         *
+         * **Use cases:**
+         * - Switch to a secret key for server-side operations like `retrieveCustomer`
+         * - Override the key for all subsequent Stripe SDK operations
+         *
+         * **Warning:**
+         * - This overrides the publishable key set during initialization
+         * - Affects all Stripe instances in the application
+         * - Client-side operations (tokens, payment methods) won't work with secret keys
+         *
+         * @param apiKey The Stripe API key (publishable or secret)
          */
         public fun setApiKey(apiKey: String) {
             StripeJava.apiKey = apiKey
