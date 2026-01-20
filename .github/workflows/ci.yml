@@ -140,7 +140,7 @@ jobs:
         xcodebuild build-for-testing \
           -project iosApp.xcodeproj \
           -scheme iosApp \
-          -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
           -allowProvisioningUpdates \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
@@ -152,7 +152,7 @@ jobs:
         xcodebuild test-without-building \
           -project iosApp.xcodeproj \
           -scheme iosApp \
-          -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
           -only-testing:iosAppUITests \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO
