@@ -68,7 +68,7 @@ jobs:
 
   android-ui-tests:
     name: UI Tests (android)
-    runs-on: macos-latest  # macOS has better hardware acceleration for Android emulator
+    runs-on: macos-13  # Intel macOS for x86_64 emulator with hardware acceleration
 
     steps:
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -93,12 +93,12 @@ jobs:
     - name: Run connected Android tests
       uses: reactivecircus/android-emulator-runner@b530d96654c385303d652368551fb075bc2f0b6b # v2
       with:
-        api-level: 31
-        target: google_apis
-        arch: arm64-v8a
+        api-level: 29
+        target: default
+        arch: x86_64
         force-avd-creation: false
         emulator-boot-timeout: 600
-        emulator-options: -no-window -no-audio -no-boot-anim -gpu host
+        emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect
         disable-animations: true
         script: ./gradlew :stripe:connectedDebugAndroidTest --no-daemon
 
