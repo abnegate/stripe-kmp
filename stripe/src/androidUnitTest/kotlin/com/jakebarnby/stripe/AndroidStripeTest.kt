@@ -304,11 +304,11 @@ class AndroidStripeTest {
         )
 
         val config = PaymentIntentConfiguration(
-            clientSecret = "pi_android_test_secret_123",
+            clientSecret = "pi_androidtest123_secret_abc456",
             paymentSheetConfiguration = paymentSheetConfig
         )
 
-        assertEquals("pi_android_test_secret_123", config.clientSecret)
+        assertEquals("pi_androidtest123_secret_abc456", config.clientSecret)
         assertNotNull(config.paymentSheetConfiguration)
     }
 
@@ -332,11 +332,11 @@ class AndroidStripeTest {
         )
 
         val config = SetupIntentConfiguration(
-            clientSecret = "seti_android_test_secret_456",
+            clientSecret = "seti_androidtest456_secret_xyz789",
             paymentSheetConfiguration = paymentSheetConfig
         )
 
-        assertEquals("seti_android_test_secret_456", config.clientSecret)
+        assertEquals("seti_androidtest456_secret_xyz789", config.clientSecret)
         assertNotNull(config.paymentSheetConfiguration)
     }
 }
