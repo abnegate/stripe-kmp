@@ -133,8 +133,8 @@ class IdentityVerificationSheetTest {
 
         val result = IdentityVerificationSheetResult.Completed(session)
         assertNotNull(result.session.lastError)
-        assertEquals(VerificationErrorCode.DOCUMENT_EXPIRED, result.session.lastError!!.code)
-        assertEquals("Document has expired", result.session.lastError!!.reason)
+        assertEquals(VerificationErrorCode.DOCUMENT_EXPIRED, result.session.lastError.code)
+        assertEquals("Document has expired", result.session.lastError.reason)
     }
 
     @Test
@@ -165,9 +165,9 @@ class IdentityVerificationSheetTest {
 
         val result = IdentityVerificationSheetResult.Completed(session)
         assertNotNull(result.session.verifiedOutputs)
-        assertEquals("John", result.session.verifiedOutputs!!.firstName)
-        assertEquals("Doe", result.session.verifiedOutputs!!.lastName)
-        assertEquals(15, result.session.verifiedOutputs!!.dateOfBirth?.day)
+        assertEquals("John", result.session.verifiedOutputs.firstName)
+        assertEquals("Doe", result.session.verifiedOutputs.lastName)
+        assertEquals(15, result.session.verifiedOutputs.dateOfBirth?.day)
     }
 
     @Test
