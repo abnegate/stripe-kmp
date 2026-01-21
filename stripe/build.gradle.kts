@@ -104,15 +104,6 @@ kotlin {
             }
         }
 
-        val androidInstrumentedTest by getting {
-            dependencies {
-                implementation(libs.kotlin.test)
-                implementation(libs.kotlin.testJunit)
-                implementation(libs.androidx.testExt.junit)
-                implementation(libs.androidx.espresso.core)
-            }
-        }
-
         val clientMain by creating {
             dependsOn(commonMain.get())
             dependencies {
