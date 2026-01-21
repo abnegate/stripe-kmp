@@ -148,19 +148,24 @@ import UIKit
             metadata: nil
         )
 
-        STPAPIClient.shared.createPaymentMethod(with: paymentMethodParams) { paymentMethod, error in
-            if let pm = paymentMethod, let card = pm.card {
-                completion(
-                    pm.stripeId,
-                    nil,
-                    card.last4,
-                    card.expMonth?.intValue ?? 0,
-                    card.expYear?.intValue ?? 0,
-                    card.brand.stringValue,
-                    card.funding.stringValue
-                )
-            } else {
-                completion(nil, error?.localizedDescription ?? "Unknown error", nil, 0, 0, nil, nil)
+        Task {
+            do {
+                let paymentMethod = try await STPAPIClient.shared.createPaymentMethod(with: paymentMethodParams, additionalPaymentUserAgentValues: [])
+                if let card = paymentMethod.card {
+                    completion(
+                        paymentMethod.stripeId,
+                        nil,
+                        card.last4,
+                        card.expMonth,
+                        card.expYear,
+                        card.brand.stringValue,
+                        card.funding
+                    )
+                } else {
+                    completion(nil, "No card data in payment method", nil, 0, 0, nil, nil)
+                }
+            } catch {
+                completion(nil, error.localizedDescription, nil, 0, 0, nil, nil)
             }
         }
     }
@@ -184,7 +189,7 @@ import UIKit
             if let pi = paymentIntent {
                 completion(
                     pi.stripeId,
-                    pi.amount,
+                    Int64(pi.amount),
                     pi.status.stringValue,
                     nil
                 )
@@ -214,7 +219,7 @@ import UIKit
             switch status {
             case .succeeded:
                 if let pi = paymentIntent {
-                    completion(pi.stripeId, pi.amount, pi.status.stringValue, nil)
+                    completion(pi.stripeId, Int64(pi.amount), pi.status.stringValue, nil)
                 } else {
                     completion(nil, 0, "succeeded", nil)
                 }
@@ -243,7 +248,7 @@ import UIKit
             switch status {
             case .succeeded:
                 if let pi = paymentIntent {
-                    completion(pi.stripeId, pi.amount, pi.status.stringValue, nil)
+                    completion(pi.stripeId, Int64(pi.amount), pi.status.stringValue, nil)
                 } else {
                     completion(nil, 0, "succeeded", nil)
                 }
@@ -442,6 +447,7 @@ extension STPCardBrand {
         case .JCB: return "jcb"
         case .dinersClub: return "diners"
         case .unionPay: return "unionpay"
+        case .cartesBancaires: return "cartes_bancaires"
         case .unknown: return "unknown"
         @unknown default: return "unknown"
         }
@@ -502,10 +508,8 @@ extension STPSourceType {
         case "sofort": return .sofort
         case "three_d_secure": return .threeDSecure
         case "alipay": return .alipay
-        case "p24": return .p24
         case "eps": return .EPS
         case "multibanco": return .multibanco
-        case "wechat_pay": return .wechatPay
         case "klarna": return .klarna
         default: return .unknown
         }
@@ -521,10 +525,8 @@ extension STPSourceType {
         case .sofort: return "sofort"
         case .threeDSecure: return "three_d_secure"
         case .alipay: return "alipay"
-        case .p24: return "p24"
         case .EPS: return "eps"
         case .multibanco: return "multibanco"
-        case .wechatPay: return "wechat_pay"
         case .klarna: return "klarna"
         case .unknown: return "unknown"
         @unknown default: return "unknown"

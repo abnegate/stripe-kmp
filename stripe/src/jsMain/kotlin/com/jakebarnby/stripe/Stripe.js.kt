@@ -17,23 +17,18 @@ public external object StripeJS {
 public external interface StripeInstance {
     public val publishableKey: String
 
-    // Token creation
     public fun createToken(type: String, data: dynamic = definedExternally): Promise<StripeTokenResult>
 
-    // Source creation
     public fun createSource(params: dynamic): Promise<StripeSourceResult>
     public fun retrieveSource(params: dynamic): Promise<StripeSourceResult>
 
-    // PaymentMethod
     public fun createPaymentMethod(params: dynamic): Promise<StripePaymentMethodResult>
     public fun retrievePaymentMethod(id: String): Promise<StripePaymentMethodResult>
 
-    // PaymentIntent
     public fun retrievePaymentIntent(clientSecret: String): Promise<StripePaymentIntentResult>
     public fun confirmCardPayment(clientSecret: String, data: dynamic = definedExternally): Promise<StripePaymentIntentResult>
     public fun handleCardAction(clientSecret: String): Promise<StripePaymentIntentResult>
 
-    // SetupIntent
     public fun retrieveSetupIntent(clientSecret: String): Promise<StripeSetupIntentResult>
     public fun confirmCardSetup(clientSecret: String, data: dynamic = definedExternally): Promise<StripeSetupIntentResult>
     public fun handleCardSetup(clientSecret: String): Promise<StripeSetupIntentResult>
@@ -120,9 +115,6 @@ public actual class Stripe private constructor(
         }
     }
 
-    // ============================================================================
-    // Token Creation
-    // ============================================================================
 
     public actual suspend fun createCardToken(params: CardParams, idempotencyKey: IdempotencyKey?): StripeResult<Token> {
         return StripeResult.runCatching {
@@ -241,9 +233,6 @@ public actual class Stripe private constructor(
         )
     }
 
-    // ============================================================================
-    // Source Creation
-    // ============================================================================
 
     public actual suspend fun createSource(params: SourceParams, idempotencyKey: IdempotencyKey?): StripeResult<Source> {
         return StripeResult.runCatching {
@@ -329,9 +318,6 @@ public actual class Stripe private constructor(
         }
     }
 
-    // ============================================================================
-    // PaymentMethod
-    // ============================================================================
 
     public actual suspend fun createPaymentMethod(params: PaymentMethodCreateParams, idempotencyKey: IdempotencyKey?): StripeResult<PaymentMethod> {
         return StripeResult.runCatching {
@@ -416,9 +402,6 @@ public actual class Stripe private constructor(
         }
     }
 
-    // ============================================================================
-    // PaymentIntent
-    // ============================================================================
 
     public actual suspend fun retrievePaymentIntent(clientSecret: String): StripeResult<PaymentIntent> {
         return StripeResult.runCatching {
@@ -563,9 +546,6 @@ public actual class Stripe private constructor(
         }
     }
 
-    // ============================================================================
-    // SetupIntent
-    // ============================================================================
 
     public actual suspend fun retrieveSetupIntent(clientSecret: String): StripeResult<SetupIntent> {
         return StripeResult.runCatching {
@@ -683,25 +663,6 @@ public actual class Stripe private constructor(
         }
     }
 
-    // ============================================================================
-    // Customer
-    // ============================================================================
-
-    public actual suspend fun retrieveCustomer(customerId: String): StripeResult<Customer> {
-        return StripeResult.failure(
-            StripeException("Customer retrieval requires server-side implementation for security")
-        )
-    }
-
-    public actual suspend fun createEphemeralKey(params: EphemeralKeyCreateParams): StripeResult<EphemeralKey> {
-        return StripeResult.failure(
-            StripeException("Ephemeral key creation requires server-side implementation for security")
-        )
-    }
-
-    // ============================================================================
-    // Private helper methods for converting JS objects to KMP models
-    // ============================================================================
 
     private fun convertJsSource(jsSource: dynamic): Source {
         val status = SourceStatus.fromValue(jsSource.status as String)

@@ -9,8 +9,7 @@ Pod::Spec.new do |spec|
     spec.vendored_frameworks      = 'build/cocoapods/framework/StripeKMP.framework'
     spec.libraries                = 'c++'
     spec.ios.deployment_target    = '13.0'
-    spec.dependency 'StripeFinancialConnections', '24.5.0'
-    spec.dependency 'StripePaymentSheet', '24.5.0'
+    spec.dependency 'StripePaymentSheet', '25.5.0'
     if !Dir.exist?('build/cocoapods/framework/StripeKMP.framework') || Dir.empty?('build/cocoapods/framework/StripeKMP.framework')
         raise "
         Kotlin framework 'StripeKMP' doesn't exist yet, so a proper Xcode project can't be generated.

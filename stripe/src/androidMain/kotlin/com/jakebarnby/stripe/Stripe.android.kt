@@ -283,20 +283,12 @@ public actual class Stripe private constructor(
     }
 
     // ============================================================================
-    // Customer
+    // Customer (not exposed in common API - server-side only)
     // ============================================================================
 
-    public actual suspend fun retrieveCustomer(customerId: String): StripeResult<Customer> = withContext(Dispatchers.IO) {
-        StripeResult.failure(
-            StripeException("Customer retrieval requires server-side implementation for security")
-        )
-    }
-
-    public actual suspend fun createEphemeralKey(params: EphemeralKeyCreateParams): StripeResult<EphemeralKey> = withContext(Dispatchers.IO) {
-        StripeResult.failure(
-            StripeException("Ephemeral key creation requires server-side implementation for security")
-        )
-    }
+    // Note: retrieveCustomer and createEphemeralKey are server-side operations
+    // that require a secret key. They are not part of the common API.
+    // Use server-side endpoints or the JVM target with stripe-java for these operations.
 
     public actual companion object {
         // CRITICAL-06: Use AtomicReference for thread-safe singleton

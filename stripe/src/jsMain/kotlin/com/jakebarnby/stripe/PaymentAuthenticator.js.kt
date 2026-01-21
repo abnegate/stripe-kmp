@@ -304,9 +304,6 @@ public actual class PaymentAuthenticator private constructor() {
         )
     }
 
-    // ============================================================================
-    // Private helper methods for converting JS objects to KMP models
-    // ============================================================================
 
     private fun convertJsPaymentIntent(jsIntent: dynamic): PaymentIntent {
         val status = when (jsIntent.status as String) {

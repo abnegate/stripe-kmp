@@ -320,11 +320,19 @@ public data class ConfirmPaymentIntentParams(
          */
         public fun createWithPaymentMethodId(
             paymentMethodId: String,
-            clientSecret: String
+            clientSecret: String,
+            returnUrl: String? = null,
+            shipping: ShippingDetails? = null,
+            receiptEmail: String? = null,
+            setupFutureUsage: SetupFutureUsage? = null
         ): ConfirmPaymentIntentParams {
             return ConfirmPaymentIntentParams(
                 clientSecret = clientSecret,
-                paymentMethodId = paymentMethodId
+                paymentMethodId = paymentMethodId,
+                returnUrl = returnUrl,
+                shipping = shipping,
+                receiptEmail = receiptEmail,
+                setupFutureUsage = setupFutureUsage
             )
         }
 
@@ -333,11 +341,19 @@ public data class ConfirmPaymentIntentParams(
          */
         public fun createWithPaymentMethodCreateParams(
             paymentMethodCreateParams: PaymentMethodCreateParams,
-            clientSecret: String
+            clientSecret: String,
+            returnUrl: String? = null,
+            shipping: ShippingDetails? = null,
+            receiptEmail: String? = null,
+            setupFutureUsage: SetupFutureUsage? = null
         ): ConfirmPaymentIntentParams {
             return ConfirmPaymentIntentParams(
                 clientSecret = clientSecret,
-                paymentMethodCreateParams = paymentMethodCreateParams
+                paymentMethodCreateParams = paymentMethodCreateParams,
+                returnUrl = returnUrl,
+                shipping = shipping,
+                receiptEmail = receiptEmail,
+                setupFutureUsage = setupFutureUsage
             )
         }
 

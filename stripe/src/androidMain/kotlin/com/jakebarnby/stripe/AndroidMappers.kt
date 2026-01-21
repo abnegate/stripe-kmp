@@ -20,7 +20,6 @@ import com.jakebarnby.stripe.model.*
  */
 
 // Placeholder mapper functions
-// These should be implemented to match your specific Stripe Android SDK version
 
 internal fun com.stripe.android.model.Token.toKmpToken(): Token {
     // Simplified stub - implement based on Android SDK version

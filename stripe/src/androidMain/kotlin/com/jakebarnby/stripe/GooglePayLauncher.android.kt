@@ -264,9 +264,6 @@ public actual class GooglePayLauncher {
         }
     }
 
-    // ============================================================================
-    // Private helper methods
-    // ============================================================================
 
     /**
      * Handle Google Pay flow for PaymentIntent.

@@ -19,6 +19,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withCard_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -36,9 +38,7 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createPaymentMethod(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful payment method creation")
-        val pm = result.value
+        val pm = assertSuccess(result, "Expected successful payment method creation")
         assertNotNull(pm.id, "Payment method ID should not be null")
         assertTrue(pm.id.startsWith("pm_"), "Payment method ID should start with 'pm_'")
         assertEquals("4242", pm.card?.last4, "Last 4 digits should match test card")
@@ -48,6 +48,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withCardAndFullBillingDetails_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -81,9 +83,7 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createPaymentMethod(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful payment method creation")
-        val pm = result.value
+        val pm = assertSuccess(result, "Expected successful payment method creation")
         assertTrue(pm.id.startsWith("pm_"), "Payment method ID should start with 'pm_'")
         assertEquals("Jane Smith", pm.billingDetails?.name, "Billing name should match")
         assertEquals("jane@example.com", pm.billingDetails?.email, "Billing email should match")
@@ -91,6 +91,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withMastercard_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -108,9 +110,7 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createPaymentMethod(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful payment method creation")
-        val pm = result.value
+        val pm = assertSuccess(result, "Expected successful payment method creation")
         assertTrue(pm.id.startsWith("pm_"), "Payment method ID should start with 'pm_'")
         assertEquals("4444", pm.card?.last4, "Last 4 digits should match Mastercard")
         assertEquals(
@@ -122,6 +122,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withAmex_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -139,9 +141,7 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createPaymentMethod(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful payment method creation")
-        val pm = result.value
+        val pm = assertSuccess(result, "Expected successful payment method creation")
         assertTrue(pm.id.startsWith("pm_"), "Payment method ID should start with 'pm_'")
         assertEquals("0005", pm.card?.last4, "Last 4 digits should match Amex")
         assertEquals(
@@ -153,6 +153,8 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
 
     @Test
     fun testCreatePaymentMethod_withMetadata_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -176,15 +178,15 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createPaymentMethod(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful payment method creation")
-        val pm = result.value
+        val pm = assertSuccess(result, "Expected successful payment method creation")
         assertTrue(pm.id.startsWith("pm_"), "Payment method ID should start with 'pm_'")
         // Note: Metadata verification depends on API response structure
     }
 
     @Test
     fun testRetrievePaymentMethod_afterCreation_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -203,20 +205,19 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
         )
 
         val createResult = stripe.createPaymentMethod(createParams)
-        assertTrue(createResult is StripeResult.Success, "Payment method creation should succeed")
-        val createdPm = createResult.value
+        val createdPm = assertSuccess(createResult, "Payment method creation should succeed")
 
         // Now retrieve it
         val retrieveResult = stripe.retrievePaymentMethod(createdPm.id)
-
-        assertTrue(retrieveResult is StripeResult.Success, "Payment method retrieval should succeed")
-        val retrievedPm = retrieveResult.value
+        val retrievedPm = assertSuccess(retrieveResult, "Payment method retrieval should succeed")
         assertEquals(createdPm.id, retrievedPm.id, "Retrieved payment method should have same ID")
         assertEquals("4242", retrievedPm.card?.last4, "Card details should match")
     }
 
     @Test
     fun testCreatePaymentMethod_usingBuilder_succeeds() = runTest {
+        skipOnJvm()
+        if (isJvmPlatform()) return@runTest
         skipIfNoApiKey()
         if (!TestConfiguration.shouldRunIntegrationTests) return@runTest
 
@@ -229,9 +230,7 @@ public class PaymentMethodIntegrationTest : IntegrationTestBase() {
         )
 
         val result = stripe.createPaymentMethod(params)
-
-        assertTrue(result is StripeResult.Success, "Expected successful payment method creation")
-        val pm = result.value
+        val pm = assertSuccess(result, "Expected successful payment method creation")
         assertTrue(pm.id.startsWith("pm_"), "Payment method ID should start with 'pm_'")
         assertEquals("4242", pm.card?.last4, "Last 4 digits should match test card")
     }

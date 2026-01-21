@@ -7,9 +7,6 @@ import kotlin.test.*
  */
 class AuthenticationTest {
 
-    // ============================================================================
-    // ThreeDSecureChallenge Tests
-    // ============================================================================
 
     @Test
     fun testThreeDSecureChallengeCreation() {
@@ -65,9 +62,6 @@ class AuthenticationTest {
         }
     }
 
-    // ============================================================================
-    // ThreeDSecureVersion Tests
-    // ============================================================================
 
     @Test
     fun testThreeDSecureVersionValues() {
@@ -84,9 +78,6 @@ class AuthenticationTest {
         assertNull(ThreeDSecureVersion.fromValue("3.0"))
     }
 
-    // ============================================================================
-    // AuthenticationResult Tests
-    // ============================================================================
 
     @Test
     fun testAuthenticationResultCompletedWithPaymentIntent() {
@@ -167,9 +158,6 @@ class AuthenticationTest {
         assertNull(result.setupIntent)
     }
 
-    // ============================================================================
-    // Stripe3ds2AuthenticationResponse Tests
-    // ============================================================================
 
     @Test
     fun testStripe3ds2AuthenticationResponseSucceeded() {
@@ -275,9 +263,6 @@ class AuthenticationTest {
         }
     }
 
-    // ============================================================================
-    // AuthenticationState Tests
-    // ============================================================================
 
     @Test
     fun testAuthenticationStateValues() {
@@ -296,9 +281,6 @@ class AuthenticationTest {
         assertNull(AuthenticationState.fromValue("unknown"))
     }
 
-    // ============================================================================
-    // AuthenticatePaymentParams Tests
-    // ============================================================================
 
     @Test
     fun testAuthenticatePaymentParamsCreation() {
@@ -332,9 +314,6 @@ class AuthenticationTest {
         }
     }
 
-    // ============================================================================
-    // AuthenticateSetupParams Tests
-    // ============================================================================
 
     @Test
     fun testAuthenticateSetupParamsCreation() {
@@ -368,9 +347,6 @@ class AuthenticationTest {
         }
     }
 
-    // ============================================================================
-    // AuthenticationCompletionOptions Tests
-    // ============================================================================
 
     @Test
     fun testAuthenticationCompletionOptionsDefaults() {
@@ -413,9 +389,6 @@ class AuthenticationTest {
         assertEquals(mandateData, options.mandateData)
     }
 
-    // ============================================================================
-    // Helper Methods
-    // ============================================================================
 
     private fun createTestPaymentIntent(): PaymentIntent {
         return PaymentIntent(

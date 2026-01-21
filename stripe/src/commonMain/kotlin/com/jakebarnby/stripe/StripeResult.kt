@@ -103,7 +103,15 @@ public sealed class StripeResult<out T> {
             } catch (e: StripeException) {
                 failure(e)
             } catch (e: Exception) {
-                failure(StripeException(e.message ?: "Unknown error", cause = e))
+                // Log the full exception details for debugging
+                val errorMessage = buildString {
+                    append(e.message ?: "Unknown error")
+                    append(" [${e::class.simpleName}]")
+                    e.cause?.let { cause ->
+                        append(" - Caused by: ${cause.message} [${cause::class.simpleName}]")
+                    }
+                }
+                failure(StripeException(errorMessage, cause = e))
             }
         }
     }

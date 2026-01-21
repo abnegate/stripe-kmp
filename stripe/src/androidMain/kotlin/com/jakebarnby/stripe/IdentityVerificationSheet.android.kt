@@ -12,7 +12,6 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.resume
 
-// Use WeakReference to avoid memory leaks
 private val currentIdentityActivity = AtomicReference<WeakReference<ComponentActivity>?>(null)
 
 /**
